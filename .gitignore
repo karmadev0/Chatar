@@ -1,0 +1,13 @@
+# Archivos sensibles
+backend/.env
+backend/.env.local
+backend/.env*.backup
+
+# Carpetas de dependencias (ejemplo)
+backend/node_modules/
+.vscode/
+.idea/
+
+# Archivos de sistema
+.DS_Store
+*.log
