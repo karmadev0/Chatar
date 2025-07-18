@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatar - Chat</title>
+  <link rel="stylesheet" href="./assets/css/chat.css" />
+</head>
+<body>
+  <!-- Sidebar (Menú lateral tipo Discord) -->
+  <aside id="sidebar" class="hidden">
+    <div class="sidebar-inner">
+      <!-- Mi Perfil -->
+      <section id="profile-section">
+        <h2>Mi perfil</h2>
+        <div class="profile-info">
+          <img id="profile-avatar" src="/assets/avatars/default.png" alt="Avatar" />
+          <p><strong>Usuario:</strong> <span id="profile-username">---</span></p>
+          <p><strong>ID:</strong> <span id="profile-id">---</span></p>
+          <p><strong>Creado:</strong> <span id="profile-created">---</span></p>
+          <p><strong>Estado:</strong> <span id="profile-status">---</span></p>
+        </div>
+        <button disabled>Cambiar nombre (Pronto)</button>
+        <button disabled>Cambiar contraseña (Pronto)</button>
+        <button disabled>Cambiar avatar (Pronto)</button>
+        <button disabled>Mis conexiones (Pronto)</button>
+        <button disabled>Descripción (Pronto)</button>
+      </section>
+
+      <!-- Configuración -->
+      <section id="settings-section">
+        <h2>Configuración</h2>
+        <button id="toggle-theme">Modo Claro/Oscuro</button>
+        <button disabled>Personalizar chat (Pronto)</button>
+      </section>
+
+      <!-- Cerrar sesión (fuera de secciones) -->
+      <button id="logout-button" class="logout">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- Topbar -->
+  <header id="topbar">
+    <img id="avatar" src="/assets/avatars/default.png" alt="Avatar" />
+    <span id="username">Cargando...</span>
+    <button id="menu-toggle">☰</button>
+  </header>
+
+  <!-- Chat principal -->
+  <main id="chat-container">
+    <div id="messages"></div>
+  </main>
+
+  <!-- Formulario de envío de mensaje -->
+  <form id="message-form">
+    <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off" />
+    <button type="submit">Enviar</button>
+  </form>
+
+  <script type="module" src="./assets/js/chat.js"></script>
+</body>
+</html>
+
