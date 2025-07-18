@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.js';
 dotenv.config();
 
 // Conexión a MongoDB antes de iniciar servidor
@@ -24,6 +25,7 @@ const io = new SocketServer(server, {
 
 // Middlewares
 app.use(express.json());
+app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use(cookieParser());
 app.use(express.static('public'));
