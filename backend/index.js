@@ -8,6 +8,8 @@ import { connectDB } from './config/db.js';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.js';
+import { configureChatSocket } from './sockets/chat.js';
+import messageRoutes from './routes/messages.routes.js';
 dotenv.config();
 
 // Conexión a MongoDB antes de iniciar servidor
@@ -27,6 +29,7 @@ const io = new SocketServer(server, {
 app.use(express.json());
 app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/messages', messageRoutes);
 app.use(cookieParser());
 app.use(express.static('public'));
 
@@ -36,24 +39,7 @@ app.get('/', (req, res) => {
 });
 
 // Socket.IO
-io.on('connection', (socket) => {
-  console.log('[socket] Cliente conectado:', socket.id);
-
-  socket.on('authenticate', (token) => {
-    // Aquí validaremos el token más adelante
-    console.log('[socket] Token recibido:', token);
-    socket.emit('authenticated');
-  });
-
-  socket.on('chat message', (msg) => {
-    console.log('[socket] Mensaje recibido:', msg);
-    io.emit('chat message', msg); // retransmitimos a todos
-  });
-
-  socket.on('disconnect', () => {
-    console.log('[socket] Cliente desconectado:', socket.id);
-  });
-});
+configureChatSocket(io);
 
 // Puerto
 const PORT = process.env.PORT || 3000;
