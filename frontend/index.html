@@ -1,3 +1,4 @@
+<!-- frontend/index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,9 +19,21 @@
     </form>
 
     <footer>
-      <small>¿No tienes cuenta? <a href="#">Regístrate</a></small>
+      <small>
+        ¿No tienes cuenta?
+        <a href="register.html">Regístrate</a> <br />
+        <a href="#" id="forgot-password">¿Olvidaste tu contraseña?</a>
+      </small>
     </footer>
   </main>
+
+  <!-- Modal olvidé contraseña -->
+  <div class="modal hidden" id="forgot-modal">
+    <div class="modal-content">
+      <p>Si olvidaste tu contraseña, por ahora debes contactar con Karma directamente para recuperarla jeje</p>
+      <button id="close-modal">Entendido</button>
+    </div>
+  </div>
 
   <script type="module" src="./assets/js/login.js"></script>
 </body>

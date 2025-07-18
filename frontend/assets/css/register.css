@@ -1,0 +1,5 @@
+@import url('./login.css');
+.register-container h1 {
+  color: #00ffd5;
+  margin-bottom: 2rem;
+}
