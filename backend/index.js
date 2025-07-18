@@ -4,18 +4,24 @@ import { Server as SocketServer } from 'socket.io';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { connectDB } from './config/db.js';
 import dotenv from 'dotenv';
+
+import { connectDB } from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.js';
-import { configureChatSocket } from './sockets/chat.js';
 import messageRoutes from './routes/messages.routes.js';
+import { configureChatSocket } from './sockets/chat.js';
+
 dotenv.config();
 
-// Conexión a MongoDB antes de iniciar servidor
+// Para usar __dirname en ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Conectar a MongoDB
 await connectDB();
 
-// Inicialización básica
+// Crear servidor
 const app = express();
 const server = http.createServer(app);
 const io = new SocketServer(server, {
@@ -25,18 +31,17 @@ const io = new SocketServer(server, {
   }
 });
 
-// Middlewares
+// Middlewares API
 app.use(express.json());
-app.use('/api/user', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/messages', messageRoutes);
 app.use(cookieParser());
-app.use(express.static('public'));
 
-// Rutas básicas
-app.get('/', (req, res) => {
-  res.send('🔥 Backend funcionando correctamente 🔥');
-});
+// Rutas de la API
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/messages', messageRoutes);
+
+// Servir el frontend estático desde ../frontend
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Socket.IO
 configureChatSocket(io);
