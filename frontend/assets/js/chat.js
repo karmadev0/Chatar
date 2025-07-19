@@ -66,8 +66,17 @@ async function loadUser() {
     if (!res.ok) throw new Error('Token inválido');
 
     const user = await res.json();
+
     usernameDisplay.textContent = user.username;
     avatarImg.src = user.avatarURL || '/assets/avatars/default.png';
+
+    // 👇 También pintamos en el panel de perfil
+    document.getElementById('profile-username').textContent = user.username;
+    document.getElementById('profile-id').textContent = user.id;
+    document.getElementById('profile-created').textContent = new Date(user.createdAt).toLocaleString();
+    document.getElementById('profile-status').textContent = user.isBanned ? 'Baneado' : 'Activo';
+    document.getElementById('profile-avatar').src = user.avatarURL || '/assets/avatars/default.png';
+
   } catch (err) {
     console.error('[loadUser] Sesión inválida:', err);
     localStorage.removeItem('token');
