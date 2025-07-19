@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatar - Seleccionar Tema</title>
+
+  <style>
+    :root {
+      --background-dark: #121212;
+      --text-dark: #f1f1f1;
+      --background-light: #f9f9f9;
+      --text-light: #222;
+    }
+
+    body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      background: var(--background-dark);
+      color: var(--text-dark);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .theme-option {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .theme-option button {
+      padding: 0.6rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .theme-preview {
+      border: 1px solid #444;
+      padding: 1rem;
+      border-radius: 8px;
+      background: #252525;
+      color: #f1f1f1;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .back-button {
+      margin-top: 2rem;
+      background: #444;
+      color: #fff;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Seleccionar Tema</h1>
+
+  <div class="theme-option">
+    <button class="theme-button" data-theme="dark" style="background: #333; color: #fff;">Modo Oscuro</button>
+    <button class="theme-button" data-theme="light" style="background: #eee; color: #000;">Modo Claro</button>
+    <button class="disabled">Personalizar (Pronto)</button>
+  </div>
+
+  <h2>Vista previa</h2>
+  <div class="theme-preview" id="preview">
+    <div class="message"><strong>karmabot</strong>: Hola mundo!</div>
+    <div class="message"><strong>andrea</strong>: Este es tu nuevo tema 🦄</div>
+  </div>
+
+  <button class="back-button" onclick="window.history.back()">Volver Atrás</button>
+
+  <script>
+    const root = document.documentElement;
+    const preview = document.getElementById('preview');
+    const buttons = document.querySelectorAll('.theme-button');
+
+    const applyTheme = (theme) => {
+      if (theme === 'light') {
+        document.body.style.background = 'var(--background-light)';
+        document.body.style.color = 'var(--text-light)';
+        preview.style.background = '#fff';
+        preview.style.color = '#222';
+      } else {
+        document.body.style.background = 'var(--background-dark)';
+        document.body.style.color = 'var(--text-dark)';
+        preview.style.background = '#252525';
+        preview.style.color = '#f1f1f1';
+      }
+    };
+
+    // Aplicar tema guardado al abrir
+    const saved = localStorage.getItem('theme') || 'dark';
+    applyTheme(saved);
+
+    // Al hacer clic en un botón
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedTheme = btn.dataset.theme;
+        localStorage.setItem('theme', selectedTheme);
+        applyTheme(selectedTheme);
+
+        // Redirigir a chat.html luego de seleccionar
+        setTimeout(() => {
+          window.location.href = '/chat.html';
+        }, 300);
+      });
+    });
+  </script>
+</body>
+</html>

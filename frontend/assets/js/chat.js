@@ -11,15 +11,26 @@ const avatarImg = document.getElementById('avatar');
 const messagesContainer = document.getElementById('messages');
 const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
+const renderedMessages = new Set();
 
 let socket;
 let skip = 0;
 const limit = 20;
 let allLoaded = false;
 let loading = false;
-const renderedMessages = new Set(); // 👈 Aquí está la clave para evitar duplicados
 
-// Mostrar mensaje en el DOM
+/* ======= 🌓 SISTEMA DE TEMAS ======= */
+function applyTheme() {
+  const theme = localStorage.getItem('theme') || 'dark'; // default oscuro
+  const themeLink = document.getElementById('theme-link');
+  if (themeLink) {
+    themeLink.href = `./assets/css/chat-${theme}.css`;
+    console.log(`[Tema] Tema aplicado: ${theme}`);
+  }
+}
+applyTheme(); // Aplicamos al cargar JS
+
+/* ======= 💬 RENDERIZAR MENSAJES ======= */
 function renderMessage(msg, appendToEnd = true) {
   const msgId = msg._id;
   if (renderedMessages.has(msgId)) {
@@ -40,7 +51,6 @@ function renderMessage(msg, appendToEnd = true) {
     messagesContainer.prepend(div);
   }
 
-  // Siempre hacer scroll hacia abajo si se agrega al final
   if (appendToEnd) {
     requestAnimationFrame(() => {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -48,7 +58,7 @@ function renderMessage(msg, appendToEnd = true) {
   }
 }
 
-// Enviar mensaje
+/* ======= 📤 ENVÍO DE MENSAJES ======= */
 messageForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const text = messageInput.value.trim();
@@ -59,18 +69,16 @@ messageForm.addEventListener('submit', (e) => {
   messageInput.value = '';
 });
 
-// Cargar usuario actual
+/* ======= 👤 USUARIO ACTUAL ======= */
 async function loadUser() {
   try {
     const res = await fetchWithToken('/api/user/me');
     if (!res.ok) throw new Error('Token inválido');
 
     const user = await res.json();
-
     usernameDisplay.textContent = user.username;
     avatarImg.src = user.avatarURL || '/assets/avatars/default.png';
 
-    // 👇 También pintamos en el panel de perfil
     document.getElementById('profile-username').textContent = user.username;
     document.getElementById('profile-id').textContent = user.id;
     document.getElementById('profile-created').textContent = new Date(user.createdAt).toLocaleString();
@@ -84,25 +92,23 @@ async function loadUser() {
   }
 }
 
-// Cargar historial de mensajes
+/* ======= 🕓 CARGAR MENSAJES HISTÓRICOS ======= */
 async function loadMessages() {
   if (loading || allLoaded) return;
   loading = true;
 
   try {
     const res = await fetchWithToken(`/api/messages?limit=${limit}&skip=${skip}`);
-    const msgs = await res.json(); // msgs: [reciente … antiguo]
+    const msgs = await res.json();
 
     if (!Array.isArray(msgs)) throw new Error('Formato inesperado');
 
     if (msgs.length < limit) allLoaded = true;
     skip += msgs.length;
 
-    const ordered = msgs.reverse(); // [antiguo … reciente]
+    const ordered = msgs.reverse();
+    ordered.forEach(msg => renderMessage(msg, true));
 
-    ordered.forEach(msg => renderMessage(msg, true)); // 👈 los agregamos al final
-
-    // 👇 solo hacemos scroll hasta abajo si es la primera carga
     if (skip === msgs.length) {
       requestAnimationFrame(() => {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -115,20 +121,20 @@ async function loadMessages() {
   }
 }
 
-// Scroll infinito hacia arriba
+/* ======= ⬆️ Scroll infinito hacia arriba ======= */
 messagesContainer.addEventListener('scroll', () => {
   if (messagesContainer.scrollTop === 0) {
     loadMessages();
   }
 });
 
-// Logout
+/* ======= 🔐 LOGOUT ======= */
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem('token');
   window.location.href = '/index.html';
 });
 
-// Conectar socket
+/* ======= 🔌 CONEXIÓN SOCKET.IO ======= */
 function connectSocket() {
   socket = io({
     auth: {
@@ -153,7 +159,7 @@ function connectSocket() {
 
   socket.on('chat message', (msg) => {
     console.log('[Socket] Mensaje recibido:', msg);
-    renderMessage(msg, true); // Agregar al final + scroll automático
+    renderMessage(msg, true);
   });
 
   socket.on('disconnect', () => {
@@ -161,7 +167,7 @@ function connectSocket() {
   });
 }
 
-// Inicializar
+/* ======= 🚀 INICIALIZACIÓN ======= */
 setupUI();
 loadUser();
 loadMessages();

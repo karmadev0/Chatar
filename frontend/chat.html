@@ -4,15 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chatar - Chat</title>
-  <link rel="stylesheet" href="./assets/css/chat.css" />
+  <link id="theme-link" rel="stylesheet" href="./assets/css/chat-dark.css" />
+  <script>
+    // Aplica el tema antes de cargar todo el body para evitar parpadeo
+    const theme = localStorage.getItem('theme') || 'dark';
+    const link = document.getElementById('theme-link');
+    link.href = `./assets/css/chat-${theme}.css`;
+  </script>
 </head>
 <body>
   <!-- Overlay oscuro -->
   <div id="overlay"></div>
 
-  <!-- Sidebar (Menú lateral tipo Discord) -->
+  <!-- Sidebar -->
   <aside id="sidebar" class="menu">
     <div class="sidebar-inner">
+
       <!-- Mi Perfil -->
       <section id="profile-section">
         <h2>Mi perfil</h2>
@@ -33,8 +40,9 @@
       <!-- Configuración -->
       <section id="settings-section">
         <h2>Configuración</h2>
-        <button id="toggle-theme">Modo Claro/Oscuro</button>
+        <button onclick="window.location.href='theme.html'">Cambiar tema</button>
         <button disabled>Personalizar chat (Pronto)</button>
+        <button onclick="window.location.href='creditos.html'">Créditos</button>
       </section>
 
       <!-- Cerrar sesión -->
@@ -63,5 +71,12 @@
   <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script type="module" src="/assets/js/chat.js"></script>
+  <script>
+	  const theme = localStorage.getItem('theme') || 'dark';
+	  const link = document.createElement('link');
+	  link.rel = 'stylesheet';
+	  link.href = `/assets/css/chat-${theme}.css`;
+	  document.head.appendChild(link);
+  </script>
 </body>
 </html>
