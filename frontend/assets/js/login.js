@@ -31,7 +31,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// Modal "olvidé contraseña"
+// olvide contraseña
 document.getElementById('forgot-password').addEventListener('click', (e) => {
   e.preventDefault();
   document.getElementById('forgot-modal').classList.remove('hidden');

@@ -5,7 +5,7 @@ console.log('[chat.js] Archivo cargado correctamente ✅');
 import { fetchWithToken } from './api.js';
 import { setupUI } from './ui.js';
 
-// ======== 🎯 SELECTORES DEL DOM ========
+// ======== SELECTORES DEL DOM ========
 const logoutBtn = document.getElementById('logout-button');
 const usernameDisplay = document.getElementById('username');
 const avatarImg = document.getElementById('avatar');
@@ -14,7 +14,7 @@ const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 const renderedMessages = new Set();
 
-// ======== 🔮 VARIABLES GLOBALES ========
+// ======== VARIABLES GLOBALES ========
 let socket;
 let skip = 0;
 let limit = 20;
@@ -23,7 +23,7 @@ let loading = false;
 let currentUser = null;
 let firstLoad = true;
 
-// ======== 🌓 SISTEMA DE TEMAS ========
+// ======== SISTEMA DE TEMAS ========
 function applyTheme() {
     const theme = localStorage.getItem('theme') || 'dark';
     const themeLink = document.getElementById('theme-link');
@@ -34,7 +34,7 @@ function applyTheme() {
     }
 }
 
-// ======== 💬 RENDERIZAR MENSAJES ========
+// ======== RENDERIZAR MENSAJES ========
 function renderMessage(msg, appendToEnd = true) {
     const msgId = msg._id;
     
@@ -81,7 +81,7 @@ function renderMessage(msg, appendToEnd = true) {
     }
 }
 
-// ======== 📤 ENVÍO DE MENSAJES ========
+// ======== ENVÍO DE MENSAJES ========
 messageForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = messageInput.value.trim();
@@ -91,7 +91,7 @@ messageForm.addEventListener('submit', (e) => {
     messageInput.value = '';
 });
 
-// ======== 👤 USUARIO ACTUAL ========
+// ======== USUARIO ACTUAL ========
 async function loadUser() {
     try {
         const res = await fetchWithToken('/api/user/me');
@@ -118,7 +118,7 @@ async function loadUser() {
     }
 }
 
-// ======== 🕓 CARGAR MENSAJES HISTÓRICOS ========
+// ======== CARGAR MENSAJES HISTÓRICOS ========
 async function loadMessages() {
   if (loading || allLoaded) return;
   loading = true;
@@ -135,7 +135,7 @@ async function loadMessages() {
     skip += msgs.length;
 
     const ordered = msgs.reverse(); // Para que vayan desde más antiguos a más nuevos
-    ordered.forEach(msg => renderMessage(msg, true)); // Usamos appendToEnd = false
+    ordered.forEach(msg => renderMessage(msg, true));
 
     if (firstLoad) {
       requestAnimationFrame(() => {
@@ -156,13 +156,13 @@ async function loadMessages() {
   }
 }
 
-// ======== 🔐 LOGOUT ========
+// ======== LOGOUT ========
 logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('token');
     window.location.href = '/index.html';
 });
 
-// ======== 🔌 CONEXIÓN SOCKET.IO ========
+// ======== CONEXIÓN SOCKET.IO ========
 function connectSocket() {
     socket = io({
         auth: {
@@ -202,7 +202,7 @@ messagesContainer.addEventListener('scroll', () => {
     }
 });
 
-// ======== 🚀 INICIALIZACIÓN ========
+// ======== INICIALIZACIÓN ========
 applyTheme();
 setupUI();
 loadUser();

@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   },
   avatarURL: {
     type: String,
-    default: '/assets/image/default.jpg', // ruta local de tu frontend
+    default: '/assets/image/default.jpg', // imagen por defecto
   },
   createdAt: {
     type: Date,
@@ -29,15 +29,15 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// 🔐 Hasheo automático antes de guardar
+// Hasheo automático antes de guardar
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next(); // Solo si cambió
+  if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// 🔍 Método para comparar contraseñas
+// Método para comparar contraseñas
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

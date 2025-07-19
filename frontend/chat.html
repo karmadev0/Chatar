@@ -15,13 +15,13 @@
 </head>
 
 <body>
-    <!-- 🎭 Overlay para menús -->
+    <!-- Overlay para menús -->
     <div id="overlay"></div>
 
-    <!-- 📚 Sidebar/Menú lateral -->
+    <!-- Sidebar/Menú lateral -->
     <aside id="sidebar" class="menu">
         <div class="sidebar-inner">
-            <!-- 👤 Sección de perfil -->
+            <!-- Sección de perfil -->
             <section id="profile-section">
                 <h2>Mi perfil</h2>
                 <div class="profile-info">
@@ -34,37 +34,37 @@
                 <button onclick="window.location.href='settings.html'">Editar perfil</button>
             </section>
 
-            <!-- ⚙️ Sección de configuración -->
+            <!-- Sección de configuración -->
             <section id="settings-section">
                 <h2>Configuración</h2>
                 <button onclick="window.location.href='theme.html'">Cambiar tema</button>
                 <button onclick="window.location.href='credits.html'">Créditos</button>
             </section>
 
-            <!-- 🔐 Cerrar sesión -->
+            <!-- Cerrar sesión -->
             <button id="logout-button" class="logout">Cerrar sesión</button>
         </div>
     </aside>
 
-    <!-- 🚀 Topbar/Barra superior -->
+    <!-- Topbar/Barra superior -->
     <header id="topbar">
         <img id="avatar" class="avatar" src="/assets/avatars/default.png" alt="Avatar" />
         <span id="username">Cargando...</span>
         <button id="menu-toggle">☰</button>
     </header>
 
-    <!-- 💬 Área de chat principal -->
+    <!-- Área de chat principal -->
     <main id="chat-container">
         <div id="messages"></div>
     </main>
 
-    <!-- ✉️ Formulario de mensaje -->
+    <!-- Formulario de mensaje -->
     <form id="message-form">
         <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off" />
         <button type="submit">Enviar</button>
     </form>
 
-    <!-- 📦 Scripts -->
+    <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script type="module" src="/assets/js/chat.js"></script>
     

@@ -14,7 +14,7 @@ import { configureChatSocket } from './sockets/chat.js';
 
 dotenv.config();
 
-// Para usar __dirname en ESM
+// Para usar __dirname en frontend
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

@@ -181,7 +181,7 @@ body {
   cursor: pointer;
 }
 
-/* ==== Menús laterales (perfil y config) ==== */
+/* ==== Menús laterales ==== */
 .menu {
   position: fixed;
   top: 0;
@@ -251,7 +251,7 @@ img.avatar {
   object-position: center;
 }
 
-/* Avatares más grandes (como en perfil) */
+/* Avatares más grandes */
 img.avatar-large {
   width: 100px;
   height: 100px;

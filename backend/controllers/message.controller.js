@@ -3,9 +3,6 @@ import { User } from '../models/User.js';
 
 /**
  * Guarda un nuevo mensaje en la base de datos
- * @param {String} userId - ID del usuario que envía el mensaje
- * @param {String} text - Contenido del mensaje
- * @returns {Object|null} - Mensaje guardado con info del usuario, o null si falló
  */
 export async function saveMessage(userId, text) {
   try {
@@ -29,9 +26,6 @@ export async function saveMessage(userId, text) {
 
 /**
  * Obtiene los mensajes más recientes
- * @param {Number} limit - Cantidad de mensajes a retornar
- * @param {Number} skip - Cantidad de mensajes a omitir (paginación)
- * @returns {Array} - Lista de mensajes con info del usuario
  */
 export async function getMessages(limit = 32, skip = 0) {
   try {
@@ -42,7 +36,7 @@ export async function getMessages(limit = 32, skip = 0) {
       .populate('userId', 'username avatarURL');
 
     return messages
-      .filter(msg => msg.userId) // Evita mensajes sin usuario (borrado o inconsistente)
+      .filter(msg => msg.userId) // Evita mensajes sin usuario
       .map(msg => ({
         _id: msg._id,
         text: msg.text,

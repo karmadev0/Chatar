@@ -13,14 +13,14 @@ export function setupUI() {
     overlay.classList.add('visible');
   });
 
-  // Cerrar sidebar y cualquier menú abierto al hacer click en el overlay
+  // Cerrar sidebar
   overlay?.addEventListener('click', () => {
     sidebar.classList.remove('active');
     menus.forEach(menu => menu.classList.remove('visible'));
     overlay.classList.remove('visible');
   });
 
-  // Botones de cerrar menú lateral (perfil, config, etc)
+  // Botones de cerrar menú lateral
   closeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       btn.closest('.menu')?.classList.remove('visible');
@@ -28,7 +28,7 @@ export function setupUI() {
     });
   });
 
-  // Mostrar un menú lateral (por ejemplo, perfil)
+  // Mostrar un menú lateral
   window.openMenu = function (menuId) {
     const menu = document.getElementById(menuId);
     if (!menu) return;
@@ -36,7 +36,7 @@ export function setupUI() {
     overlay.classList.add('visible');
   };
 
-  // Cerrar un menú lateral desde cualquier parte del código
+  // Cerrar un menú lateral
   window.closeMenus = function () {
     menus.forEach(menu => menu.classList.remove('visible'));
     overlay.classList.remove('visible');

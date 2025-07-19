@@ -8,7 +8,7 @@ import { uploadImage } from '../utils/cloudinary.js';
 
 const router = express.Router();
 
-// === Obtener información del usuario autenticado ===
+// === Obtener información del usuario ===
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
@@ -86,14 +86,14 @@ router.put('/password', verifyToken, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    // 💡 Aquí es donde necesitas que comparePassword esté definido en el modelo
+    // Comparamos qje este bien
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
       return res.status(401).json({ message: 'Contraseña actual incorrecta' });
     }
 
     user.password = newPassword;
-    await user.save(); // el pre-save hook se encarga de hashearla
+    await user.save(); // guardamos
 
     res.json({ message: 'Contraseña actualizada correctamente' });
   } catch (err) {
