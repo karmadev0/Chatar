@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="oscuro">
+<head>                                                                                                                  
+  <meta charset="UTF-8" />                                                                                              
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />                                              
+  <title>Ajustes de Usuario</title>                                                                                     
+  <link id="theme-link" rel="stylesheet" href="./assets/css/chat-dark.css" />
+  <link rel="stylesheet" href="./assets/css/settings.css" />
+</head>
+<body>
+  <main id="settings-container">
+    <h1>Configuración de Usuario</h1>
+
+    <section class="setting-block">
+      <h2>Avatar</h2>
+      <img id="current-avatar" src="/assets/image/default.jpg" alt="Avatar actual" class="avatar-preview" />
+      <input type="file" id="avatar-input" accept="image/*" />                                                              
+      <button id="upload-avatar">Subir nuevo avatar</button>
+    </section>
+
+    <section class="setting-block">
+      <h2>Nombre de Usuario</h2>
+      <p><strong>Nombre actual:</strong> <span id="settings-username">---</span></p>
+      <input type="text" id="username-input" placeholder="Nuevo nombre" maxlength="16" />
+      <button id="update-username">Actualizar nombre</button>
+    </section>
+
+    <section class="setting-block">
+      <h2>Contraseña</h2>
+      <input type="password" id="current-password" placeholder="Contraseña actual" />
+      <input type="password" id="new-password" placeholder="Nueva contraseña" />
+      <button id="update-password">Cambiar contraseña</button>
+    </section>
+
+    <section class="setting-block">
+      <h2>Tu cuenta</h2>
+      <p><strong>ID:</strong> <span id="settings-id">---</span></p>
+      <p><strong>Creado:</strong> <span id="settings-created">---</span></p>
+      <p><strong>Estado:</strong> <span id="settings-status">---</span></p>
+    </section>
+
+    <button onclick="window.location.href='chat.html'" class="back-button">Volver al chat</button>
+  </main>
+
+  <script type="module" src="/assets/js/settings.js"></script>
+</body>
+</html>
