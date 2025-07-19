@@ -1,4 +1,6 @@
 // frontend/assets/js/login.js
+import { fetchWithoutToken } from './api.js';
+
 const form = document.getElementById('login-form');
 const errorMsg = document.getElementById('error-msg');
 
@@ -11,9 +13,8 @@ form.addEventListener('submit', async (e) => {
   errorMsg.textContent = 'Iniciando sesión...';
 
   try {
-    const res = await fetch('http://localhost:3000/api/auth/login', {
+    const res = await fetchWithoutToken('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
 
@@ -31,7 +32,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// olvide contraseña
+// Olvidé contraseña
 document.getElementById('forgot-password').addEventListener('click', (e) => {
   e.preventDefault();
   document.getElementById('forgot-modal').classList.remove('hidden');
