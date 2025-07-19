@@ -17,10 +17,11 @@ const renderedMessages = new Set();
 // ======== 🔮 VARIABLES GLOBALES ========
 let socket;
 let skip = 0;
-const limit = 20;
+let limit = 20;
 let allLoaded = false;
 let loading = false;
 let currentUser = null;
+let firstLoad = true;
 
 // ======== 🌓 SISTEMA DE TEMAS ========
 function applyTheme() {
@@ -119,40 +120,41 @@ async function loadUser() {
 
 // ======== 🕓 CARGAR MENSAJES HISTÓRICOS ========
 async function loadMessages() {
-    if (loading || allLoaded) return;
-    loading = true;
+  if (loading || allLoaded) return;
+  loading = true;
 
-    try {
-        const res = await fetchWithToken(`/api/messages?limit=${limit}&skip=${skip}`);
-        const msgs = await res.json();
+  const previousHeight = messagesContainer.scrollHeight;
 
-        if (!Array.isArray(msgs)) throw new Error('Formato inesperado');
+  try {
+    const res = await fetchWithToken(`/api/messages?limit=${limit}&skip=${skip}`);
+    const msgs = await res.json();
 
-        if (msgs.length < limit) allLoaded = true;
-        skip += msgs.length;
+    if (!Array.isArray(msgs)) throw new Error('Formato inesperado');
 
-        const ordered = msgs.reverse();
-        ordered.forEach(msg => renderMessage(msg, true));
+    if (msgs.length < limit) allLoaded = true;
+    skip += msgs.length;
 
-        if (skip === msgs.length) {
-            requestAnimationFrame(() => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            });
-        }
+    const ordered = msgs.reverse(); // Para que vayan desde más antiguos a más nuevos
+    ordered.forEach(msg => renderMessage(msg, true)); // Usamos appendToEnd = false
 
-    } catch (err) {
-        console.error('Error al cargar mensajes:', err);
-    } finally {
-        loading = false;
+    if (firstLoad) {
+      requestAnimationFrame(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        firstLoad = false;
+      });
+    } else {
+      requestAnimationFrame(() => {
+        const newHeight = messagesContainer.scrollHeight;
+        messagesContainer.scrollTop += newHeight - previousHeight;
+      });
     }
+
+  } catch (err) {
+    console.error('Error al cargar mensajes:', err);
+  } finally {
+    loading = false;
+  }
 }
-
-// ======== ⬆️ Scroll infinito hacia arriba ========
-messagesContainer.addEventListener('scroll', () => {
-    if (messagesContainer.scrollTop === 0) {
-        loadMessages();
-    }
-});
 
 // ======== 🔐 LOGOUT ========
 logoutBtn.addEventListener('click', () => {
@@ -192,6 +194,13 @@ function connectSocket() {
         console.warn('[Socket] Desconectado');
     });
 }
+
+messagesContainer.addEventListener('scroll', () => {
+    if (messagesContainer.scrollTop === 0) {
+        console.log('[Scroll] Top alcanzado, cargando más mensajes...');
+        loadMessages();
+    }
+});
 
 // ======== 🚀 INICIALIZACIÓN ========
 applyTheme();

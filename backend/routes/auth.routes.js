@@ -37,9 +37,16 @@ router.post('/login', async (req, res) => {
 
   try {
     const user = await User.findOne({ username }).select('+password');
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
       return res.status(401).json({
-        message: 'Credenciales inválidas'
+        message: 'El usuario no existe'
+      });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        message: 'La contraseña es incorrecta'
       });
     }
 
@@ -68,7 +75,7 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('[AUTH ERROR]', error);
     res.status(500).json({
-      message: 'Error en el servidor'
+      message: 'Error en el servidor. Intenta más tarde.'
     });
   }
 });
