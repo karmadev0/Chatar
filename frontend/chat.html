@@ -7,8 +7,11 @@
   <link rel="stylesheet" href="./assets/css/chat.css" />
 </head>
 <body>
+  <!-- Overlay oscuro -->
+  <div id="overlay"></div>
+
   <!-- Sidebar (Menú lateral tipo Discord) -->
-  <aside id="sidebar" class="hidden">
+  <aside id="sidebar" class="menu">
     <div class="sidebar-inner">
       <!-- Mi Perfil -->
       <section id="profile-section">
@@ -34,7 +37,7 @@
         <button disabled>Personalizar chat (Pronto)</button>
       </section>
 
-      <!-- Cerrar sesión (fuera de secciones) -->
+      <!-- Cerrar sesión -->
       <button id="logout-button" class="logout">Cerrar sesión</button>
     </div>
   </aside>
@@ -51,13 +54,14 @@
     <div id="messages"></div>
   </main>
 
-  <!-- Formulario de envío de mensaje -->
+  <!-- Formulario de mensaje -->
   <form id="message-form">
     <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off" />
     <button type="submit">Enviar</button>
   </form>
 
-  <script type="module" src="./assets/js/chat.js"></script>
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/assets/js/chat.js"></script>
 </body>
 </html>
-
