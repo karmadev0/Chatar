@@ -132,7 +132,7 @@ async function loadMessages() {
         skip += msgs.length;
 
         const ordered = msgs.reverse();
-        ordered.forEach(msg => renderMessage(msg, false));
+        ordered.forEach(msg => renderMessage(msg, true));
 
         if (skip === msgs.length) {
             requestAnimationFrame(() => {
