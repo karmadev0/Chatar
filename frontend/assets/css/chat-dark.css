@@ -1,35 +1,50 @@
-/* ==== Reset básico ==== */
+/* ===== 🌈 VARIABLES ===== */
+:root {
+    --bg-dark: #121212;
+    --bg-darker: #1b1b1b;
+    --bg-elements: #1e1e1e;
+    --bg-cards: #252525;
+    --accent-color: #4caf50;
+    --danger-color: #a12222;
+    --text-primary: #f1f1f1;
+    --text-secondary: #ccc;
+    --text-muted: #888;
+    --border-color: #333;
+}
+
+/* ===== 🔄 RESET BÁSICO ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* ==== Estilos generales ==== */
+/* ===== 🏗 ESTRUCTURA PRINCIPAL ===== */
 body {
     font-family: 'Segoe UI', sans-serif;
-    background-color: #121212;
-    color: #f1f1f1;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
     height: 100vh;
     display: flex;
     flex-direction: column;
     position: relative;
 }
 
-/* ==== Topbar ==== */
+/* ===== 🚀 TOPBAR ===== */
 #topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #1e1e1e;
+    background: var(--bg-elements);
     padding: 0.6rem 1rem;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
 }
 
 #topbar img#avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 #topbar #username {
@@ -41,20 +56,20 @@ body {
 #topbar #menu-toggle {
     background: none;
     border: none;
-    color: white;
+    color: var(--text-primary);
     font-size: 1.5rem;
     cursor: pointer;
 }
 
-/* ==== Sidebar ==== */
+/* ===== 📚 SIDEBAR ===== */
 #sidebar {
     position: fixed;
     top: 0;
     left: 0;
     width: 80%;
     height: 100%;
-    background: #1b1b1b;
-    color: #f1f1f1;
+    background: var(--bg-darker);
+    color: var(--text-primary);
     padding: 1rem;
     z-index: 100;
     transform: translateX(-100%);
@@ -73,19 +88,19 @@ body {
 }
 
 #sidebar section {
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 1rem;
 }
 
 #sidebar h2 {
     margin-bottom: 0.5rem;
     font-size: 1.2rem;
-    color: #ccc;
+    color: var(--text-secondary);
 }
 
 #sidebar button {
-    background: #2c2c2c;
-    color: #f1f1f1;
+    background: var(--bg-cards);
+    color: var(--text-primary);
     border: none;
     padding: 0.5rem;
     margin-top: 0.4rem;
@@ -99,12 +114,12 @@ body {
 }
 
 #sidebar button.logout {
-    background: #a12222;
+    background: var(--danger-color);
     color: #fff;
     margin-top: 2rem;
 }
 
-/* ==== Chat container ==== */
+/* ===== 💬 CHAT CONTAINER ===== */
 #chat-container {
     flex: 1;
     overflow-y: auto;
@@ -121,17 +136,47 @@ body {
 }
 
 .message {
-    background: #252525;
+    background: var(--bg-cards);
     padding: 0.6rem;
     border-radius: 8px;
-    max-width: 80%;
+    max-width: 90%;
     word-wrap: break-word;
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
 }
 
-/* ==== Formulario de mensaje ==== */
+.message .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.message-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-header {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ===== ✉️ FORMULARIO DE MENSAJE ===== */
 #message-form {
     display: flex;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-color);
 }
 
 #message-input {
@@ -139,28 +184,28 @@ body {
     padding: 0.6rem;
     border: none;
     outline: none;
-    background: #1e1e1e;
-    color: #f1f1f1;
+    background: var(--bg-elements);
+    color: var(--text-primary);
     font-size: 1rem;
 }
 
 #message-form button {
     padding: 0 1rem;
     border: none;
-    background: #4caf50;
+    background: var(--accent-color);
     color: white;
     font-weight: bold;
     cursor: pointer;
 }
 
-/* ==== Menús laterales (perfil y config) ==== */
+/* ===== ⚙️ MENÚS LATERALES ===== */
 .menu {
     position: fixed;
     top: 0;
     right: 0;
     width: 80%;
     height: 100%;
-    background: #1c1c1c;
+    background: var(--bg-darker);
     color: #fff;
     transform: translateX(100%);
     transition: transform 0.3s ease;
@@ -184,7 +229,7 @@ body {
     cursor: pointer;
 }
 
-/* ==== Overlay ==== */
+/* ===== 🎭 OVERLAY ===== */
 #overlay {
     position: fixed;
     top: 0;
@@ -198,12 +243,30 @@ body {
     transition: opacity 0.3s ease;
 }
 
+/* ==== Corrección de tamaño de avatar ==== */
+img.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Avatares más grandes (como en perfil) */
+img.avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
 #overlay.visible {
     opacity: 1;
     visibility: visible;
 }
 
-/* ==== Responsive ==== */
+/* ===== 📱 RESPONSIVE ===== */
 @media (min-width: 768px) {
     #sidebar {
         width: 300px;

@@ -13,10 +13,11 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    select: false // para proteger la contraseña por defecto
   },
   avatarURL: {
     type: String,
-    default: '/assets/image/default.jpg', // Ruta local al avatar
+    default: '/assets/image/default.jpg', // ruta local de tu frontend
   },
   createdAt: {
     type: Date,
@@ -28,22 +29,17 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// 🔐 Hash automático de contraseña si fue modificada
+// 🔐 Hasheo automático antes de guardar
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
+  if (!this.isModified('password')) return next(); // Solo si cambió
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
-// 🔁 Método para comparar contraseña ingresada vs. la guardada
+// 🔍 Método para comparar contraseñas
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 export const User = mongoose.model('User', userSchema);

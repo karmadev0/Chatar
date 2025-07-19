@@ -1,11 +1,10 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 
 const router = express.Router();
 
-// POST /api/auth/register
+// 📥 Registro
 router.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -17,12 +16,7 @@ router.post('/register', async (req, res) => {
     if (existingUser)
       return res.status(409).json({ error: 'Nombre de usuario ya en uso.' });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await User.create({
-      username,
-      password: hashedPassword
-    });
+    const newUser = await User.create({ username, password }); // 👈 sin hash manual
 
     res.status(201).json({ message: 'Usuario creado correctamente.' });
   } catch (err) {
@@ -31,24 +25,51 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Al final de routes/auth.js (o donde tengas tu ruta de login)
+// 🔑 Login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({
+      message: 'Usuario y contraseña son requeridos'
+    });
+  }
+
   try {
-    const user = await User.findOne({ username });
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    const user = await User.findOne({ username }).select('+password');
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({
+        message: 'Credenciales inválidas'
+      });
+    }
 
-    const validPass = await bcrypt.compare(password, user.password);
-    if (!validPass) return res.status(401).json({ error: 'Contraseña incorrecta.' });
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1h',
+        issuer: 'chatar',
+      }
+    );
 
-    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
+    res.json({
+      message: 'Autenticación exitosa',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        avatarURL: user.avatarURL
+      }
     });
 
-    res.json({ message: 'Login exitoso', token });
   } catch (error) {
-    console.error('[LOGIN ERROR]', error);
-    res.status(500).json({ error: 'Error en el servidor.' });
+    console.error('[AUTH ERROR]', error);
+    res.status(500).json({
+      message: 'Error en el servidor'
+    });
   }
 });
 

@@ -1,82 +1,81 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chatar - Chat</title>
-  <link id="theme-link" rel="stylesheet" href="./assets/css/chat-dark.css" />
-  <script>
-    // Aplica el tema antes de cargar todo el body para evitar parpadeo
-    const theme = localStorage.getItem('theme') || 'dark';
-    const link = document.getElementById('theme-link');
-    link.href = `./assets/css/chat-${theme}.css`;
-  </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatar - Chat</title>
+    
+    <!-- Preferencia de tema -->
+    <link id="theme-link" rel="stylesheet" href="./assets/css/chat-dark.css" />
+    <script>
+        const theme = localStorage.getItem('theme') || 'dark';
+        const link = document.getElementById('theme-link');
+        link.href = `./assets/css/chat-${theme}.css`;
+    </script>
 </head>
+
 <body>
-  <!-- Overlay oscuro -->
-  <div id="overlay"></div>
+    <!-- 🎭 Overlay para menús -->
+    <div id="overlay"></div>
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="menu">
-    <div class="sidebar-inner">
+    <!-- 📚 Sidebar/Menú lateral -->
+    <aside id="sidebar" class="menu">
+        <div class="sidebar-inner">
+            <!-- 👤 Sección de perfil -->
+            <section id="profile-section">
+                <h2>Mi perfil</h2>
+                <div class="profile-info">
+                    <img id="profile-avatar" class="avatar-large" src="/assets/avatars/default.png" alt="Avatar" />
+                    <p><strong>Usuario:</strong> <span id="profile-username">---</span></p>
+                    <p><strong>ID:</strong> <span id="profile-id">---</span></p>
+                    <p><strong>Creado:</strong> <span id="profile-created">---</span></p>
+                    <p><strong>Estado:</strong> <span id="profile-status">---</span></p>
+                </div>
+                <button onclick="window.location.href='settings.html'">Editar perfil</button>
+            </section>
 
-      <!-- Mi Perfil -->
-      <section id="profile-section">
-        <h2>Mi perfil</h2>
-        <div class="profile-info">
-          <img id="profile-avatar" src="/assets/avatars/default.png" alt="Avatar" />
-          <p><strong>Usuario:</strong> <span id="profile-username">---</span></p>
-          <p><strong>ID:</strong> <span id="profile-id">---</span></p>
-          <p><strong>Creado:</strong> <span id="profile-created">---</span></p>
-          <p><strong>Estado:</strong> <span id="profile-status">---</span></p>
+            <!-- ⚙️ Sección de configuración -->
+            <section id="settings-section">
+                <h2>Configuración</h2>
+                <button onclick="window.location.href='theme.html'">Cambiar tema</button>
+                <button disabled>Personalizar chat (Pronto)</button>
+                <button onclick="window.location.href='creditos.html'">Créditos</button>
+            </section>
+
+            <!-- 🔐 Cerrar sesión -->
+            <button id="logout-button" class="logout">Cerrar sesión</button>
         </div>
-        <button disabled>Cambiar nombre (Pronto)</button>
-        <button disabled>Cambiar contraseña (Pronto)</button>
-        <button disabled>Cambiar avatar (Pronto)</button>
-        <button disabled>Mis conexiones (Pronto)</button>
-        <button disabled>Descripción (Pronto)</button>
-      </section>
+    </aside>
 
-      <!-- Configuración -->
-      <section id="settings-section">
-        <h2>Configuración</h2>
-        <button onclick="window.location.href='theme.html'">Cambiar tema</button>
-        <button disabled>Personalizar chat (Pronto)</button>
-        <button onclick="window.location.href='creditos.html'">Créditos</button>
-      </section>
+    <!-- 🚀 Topbar/Barra superior -->
+    <header id="topbar">
+        <img id="avatar" class="avatar" src="/assets/avatars/default.png" alt="Avatar" />
+        <span id="username">Cargando...</span>
+        <button id="menu-toggle">☰</button>
+    </header>
 
-      <!-- Cerrar sesión -->
-      <button id="logout-button" class="logout">Cerrar sesión</button>
-    </div>
-  </aside>
+    <!-- 💬 Área de chat principal -->
+    <main id="chat-container">
+        <div id="messages"></div>
+    </main>
 
-  <!-- Topbar -->
-  <header id="topbar">
-    <img id="avatar" src="/assets/avatars/default.png" alt="Avatar" />
-    <span id="username">Cargando...</span>
-    <button id="menu-toggle">☰</button>
-  </header>
+    <!-- ✉️ Formulario de mensaje -->
+    <form id="message-form">
+        <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off" />
+        <button type="submit">Enviar</button>
+    </form>
 
-  <!-- Chat principal -->
-  <main id="chat-container">
-    <div id="messages"></div>
-  </main>
-
-  <!-- Formulario de mensaje -->
-  <form id="message-form">
-    <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off" />
-    <button type="submit">Enviar</button>
-  </form>
-
-  <!-- Scripts -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="/assets/js/chat.js"></script>
-  <script>
-	  const theme = localStorage.getItem('theme') || 'dark';
-	  const link = document.createElement('link');
-	  link.rel = 'stylesheet';
-	  link.href = `/assets/css/chat-${theme}.css`;
-	  document.head.appendChild(link);
-  </script>
+    <!-- 📦 Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/assets/js/chat.js"></script>
+    
+    <!-- Tema como fallback -->
+    <script>
+        const theme = localStorage.getItem('theme') || 'dark';
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `/assets/css/chat-${theme}.css`;
+        document.head.appendChild(link);
+    </script>
 </body>
 </html>
