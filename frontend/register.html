@@ -12,7 +12,8 @@
 
     <form id="register-form">
       <input type="text" name="username" placeholder="Usuario" required />
-      <input type="password" name="password" placeholder="Contraseña" required />
+      <input type="password" name="password" placeholder="Contraseña" minlength="6" required />
+      <input type="password" name="confirmPassword" placeholder="Confirmar contraseña" minlength="6" required />
       <button type="submit">Registrarse</button>
       <p id="error-msg"></p>
     </form>

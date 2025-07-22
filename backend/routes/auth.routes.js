@@ -4,23 +4,33 @@ import { User } from '../models/User.js';
 
 const router = express.Router();
 
-// Registro
+// backend/api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, confirmPassword } = req.body;
 
-    if (!username || !password)
+    if (!username || !password || !confirmPassword) {
       return res.status(400).json({ error: 'Faltan campos.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Las contraseñas no coinciden.' });
+    }
 
     const existingUser = await User.findOne({ username });
-    if (existingUser)
+    if (existingUser) {
       return res.status(409).json({ error: 'Nombre de usuario ya en uso.' });
+    }
 
-    const newUser = await User.create({ username, password }); // sin hash manual
+    await User.create({ username, password });
 
     res.status(201).json({ message: 'Usuario creado correctamente.' });
   } catch (err) {
-    console.error('[REGISTER ERROR]', err.message);
+    console.error('[REGISTER ERROR]', err);
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });
