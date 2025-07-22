@@ -22,6 +22,7 @@ let allLoaded = false;
 let loading = false;
 let currentUser = null;
 let firstLoad = true;
+let canSend = true; // throttle de envío
 
 // ======== SISTEMA DE TEMAS ========
 function applyTheme() {
@@ -34,6 +35,20 @@ function applyTheme() {
     }
 }
 
+// ======== UTIL: LINKIFY ========
+function linkify(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+}
+
+// ======== UTIL: INSERTAR SALTOS SUAVES EN PALABRAS LARGAS ========
+function softenLongWords(text, maxLen = 60) {
+    return text.replace(
+        new RegExp(`(\\S{${maxLen}})`, 'g'),
+        '$1\u200B'
+    );
+}
+
 // ======== RENDERIZAR MENSAJES ========
 function renderMessage(msg, appendToEnd = true) {
     const msgId = msg._id;
@@ -42,8 +57,11 @@ function renderMessage(msg, appendToEnd = true) {
         console.log('[renderMessage] Duplicado ignorado:', msgId);
         return;
     }
-
     renderedMessages.add(msgId);
+
+    // formatear texto: insertar saltos + linkify
+    let content = softenLongWords(msg.text);
+    content = linkify(content);
 
     const div = document.createElement('div');
     div.className = 'message';
@@ -65,7 +83,7 @@ function renderMessage(msg, appendToEnd = true) {
                 <span class="timestamp">${time}</span>
             </div>
         </div>
-        <p>${msg.text}</p>
+        <p class="message-content">${content}</p>
     `;
 
     if (appendToEnd) {
@@ -84,11 +102,18 @@ function renderMessage(msg, appendToEnd = true) {
 // ======== ENVÍO DE MENSAJES ========
 messageForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const text = messageInput.value.trim();
+    if (!canSend) return;                // throttle 1 msg/s
+    let text = messageInput.value.trim();
     if (!text) return;
+    if (text.length > 1024) {            // límite 1024 chars
+        alert('El mensaje no puede superar los 1024 caracteres.');
+        return;
+    }
 
     socket.emit('chat message', text);
     messageInput.value = '';
+    canSend = false;
+    setTimeout(() => { canSend = true; }, 1000);
 });
 
 // ======== USUARIO ACTUAL ========
@@ -134,7 +159,7 @@ async function loadMessages() {
     if (msgs.length < limit) allLoaded = true;
     skip += msgs.length;
 
-    const ordered = msgs.reverse(); // Para que vayan desde más antiguos a más nuevos
+    const ordered = msgs.reverse(); // antiguos → nuevos
     ordered.forEach(msg => renderMessage(msg, true));
 
     if (firstLoad) {
@@ -165,9 +190,7 @@ logoutBtn.addEventListener('click', () => {
 // ======== CONEXIÓN SOCKET.IO ========
 function connectSocket() {
     socket = io({
-        auth: {
-            token: localStorage.getItem('token'),
-        },
+        auth: { token: localStorage.getItem('token') },
     });
 
     socket.on('connect', () => {
