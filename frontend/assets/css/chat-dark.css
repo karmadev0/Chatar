@@ -156,6 +156,8 @@ body {
 .message-content {
     display: flex;
     flex-direction: column;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .message-header {
