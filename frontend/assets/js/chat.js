@@ -1,5 +1,3 @@
-/// frontend/assets/js/chat.js
-
 console.log('[chat.js] Archivo cargado correctamente ✅');
 
 import { fetchWithToken } from './api.js';
@@ -125,6 +123,13 @@ async function loadUser() {
         const user = await res.json();
         currentUser = user;
 
+        if (user.isBanned) {
+            alert('Tu cuenta ha sido baneada. Contacta con el soporte si crees que fue un error.');
+            localStorage.removeItem('token');
+            window.location.href = '/index.html';
+            return;
+        }
+
         // Actualizar UI
         usernameDisplay.textContent = user.username;
         avatarImg.src = user.avatarURL || '/assets/image/default.jpg';
@@ -204,6 +209,12 @@ function connectSocket() {
 
     socket.on('unauthorized', () => {
         console.error('[Socket] Token inválido. Redirigiendo...');
+        localStorage.removeItem('token');
+        window.location.href = '/index.html';
+    });
+
+    socket.on('banned', () => {
+        alert('Has sido baneado en tiempo real. Cierre de sesión automático.');
         localStorage.removeItem('token');
         window.location.href = '/index.html';
     });

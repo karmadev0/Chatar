@@ -1,4 +1,3 @@
-// frontend/assets/js/login.js
 import { fetchWithoutToken } from './api.js';
 
 const form = document.getElementById('login-form');
@@ -21,6 +20,10 @@ form.addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (!res.ok) {
+      if (res.status === 403 && data.message?.includes('baneado')) {
+        throw new Error('Tu cuenta ha sido baneada. Contacta con el soporte si crees que fue un error.');
+      }
+
       throw new Error(data.message || 'Error desconocido');
     }
 

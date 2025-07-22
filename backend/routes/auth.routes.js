@@ -71,6 +71,14 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // ban jsjs
+    if (user.isBanned) {
+      return res.status(403).json({
+        message: 'Este usuario ha sido baneado del sistema.'
+      });
+    }
+
+    // Login exitoso
     const token = jwt.sign(
       {
         id: user._id,
