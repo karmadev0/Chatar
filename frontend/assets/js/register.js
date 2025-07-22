@@ -31,7 +31,7 @@ form.addEventListener('submit', async (e) => {
     const res = await fetchWithoutToken('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, confirmPassword })
     });
 
     const data = await res.json();
