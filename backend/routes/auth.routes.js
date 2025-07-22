@@ -13,6 +13,10 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Faltan campos.' });
     }
 
+    if (username.length > 16) {
+      return res.status(400).json({ error: 'El nombre de usuario no puede tener más de 16 caracteres.' });
+    }
+
     if (password.length < 6) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
     }
@@ -29,8 +33,15 @@ router.post('/register', async (req, res) => {
     await User.create({ username, password });
 
     res.status(201).json({ message: 'Usuario creado correctamente.' });
+
   } catch (err) {
     console.error('[REGISTER ERROR]', err);
+
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ error: messages.join(', ') });
+    }
+
     res.status(500).json({ error: 'Error en el servidor.' });
   }
 });

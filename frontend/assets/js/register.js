@@ -20,6 +20,13 @@ form.addEventListener('submit', async (e) => {
     errorMsg.textContent = 'La contraseña debe tener al menos 6 caracteres.';
     return;
   }
+
+	if (username.length > 16) {
+		errorMsg.textContent = 'El nombre de usuario no puede tener más de 16 caracteres.';
+		return;
+	}
+
+
   if (password !== confirmPassword) {
     errorMsg.textContent = 'Las contraseñas no coinciden.';
     return;
