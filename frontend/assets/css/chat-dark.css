@@ -32,6 +32,11 @@ body {
 
 /* ===== TOPBAR ===== */
 #topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -71,7 +76,7 @@ body {
     background: var(--bg-darker);
     color: var(--text-primary);
     padding: 1rem;
-    z-index: 100;
+    z-index: 300;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
@@ -120,10 +125,22 @@ body {
 }
 
 /* ===== CHAT CONTAINER ===== */
+#input-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 110;
+  background: var(--bg-elements);
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+}
+
 #chat-container {
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
+    padding-top: 3.5rem;
+    padding-bottom: 0;
     display: flex;
     flex-direction: column-reverse;
     gap: 0.5rem;
@@ -177,27 +194,29 @@ body {
 
 /* ===== FORMULARIO DE MENSAJE ===== */
 #message-form {
-    display: flex;
-    border-top: 1px solid var(--border-color);
+  display: flex;
+  padding: 0.5rem 1rem;
+  max-width: 100%;
+  gap: 0.5rem;
+  border-top: none;
 }
 
 #message-input {
-    flex: 1;
-    padding: 0.6rem;
-    border: none;
-    outline: none;
-    background: var(--bg-elements);
-    color: var(--text-primary);
-    font-size: 1rem;
+  flex: 1;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 4px;
+  background: var(--bg-dark);
+  color: var(--text-primary);
 }
 
 #message-form button {
-    padding: 0 1rem;
-    border: none;
-    background: var(--accent-color);
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 0 1rem;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 /* ===== MENÚS LATERALES ===== */
@@ -211,7 +230,7 @@ body {
     color: #fff;
     transform: translateX(100%);
     transition: transform 0.3s ease;
-    z-index: 101;
+    z-index: 400;
     padding: 1rem;
     overflow-y: auto;
 }
@@ -220,6 +239,7 @@ body {
     transform: translateX(0);
 }
 
+/* ===== BOTÓN CERRAR MENÚ ===== */
 .menu-close {
     background: none;
     border: none;
@@ -241,8 +261,15 @@ body {
     background: rgba(0, 0, 0, 0.5);
     opacity: 0;
     visibility: hidden;
-    z-index: 100;
-    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 250;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#overlay.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 /* ==== Corrección de tamaño de avatar ==== */
@@ -261,11 +288,6 @@ img.avatar-large {
   border-radius: 50%;
   object-fit: cover;
   object-position: center;
-}
-
-#overlay.visible {
-    opacity: 1;
-    visibility: visible;
 }
 
 /* ===== RESPONSIVE ===== */

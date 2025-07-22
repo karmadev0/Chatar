@@ -59,12 +59,15 @@
     </main>
 
     <!-- Formulario de mensaje -->
-    <form id="message-form">
-        <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off" />
-        <button type="submit">Enviar</button>
-    </form>
+    <div id="input-container">
+	    <form id="message-form">
+		    <input id="message-input" />
+		    <button>Enviar</button>
+	    </form>
+    </div>
 
-    <!-- Scripts -->
+
+        <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script type="module" src="/assets/js/chat.js"></script>
     
