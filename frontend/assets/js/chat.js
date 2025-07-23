@@ -10,7 +10,7 @@ const logoutBtn = document.getElementById('logout-button');
 const usernameDisplay = document.getElementById('username');
 const avatarImg = document.getElementById('avatar');
 const messagesWrapper = document.getElementById('messages-wrapper');
-const messagesContainer = document.getElementById('messages');        
+const messagesContainer = document.getElementById('messages');
 const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 const renderedMessages = new Set();
@@ -25,6 +25,7 @@ let currentUser = null;
 let canSend = true;
 let isUserScrolling = false;
 let scrollTimeout = null;
+let isAtBottom = true;
 
 // ======== SISTEMA DE TEMAS ========
 function applyTheme() {
@@ -51,33 +52,49 @@ function softenLongWords(text, maxLen = 60) {
     );
 }
 
-// ======== DETECTAR SI ESTÁ CERCA DEL FONDO ========
-function isNearBottom(threshold = 100) {
-    return messagesWrapper.scrollHeight - messagesWrapper.scrollTop - messagesWrapper.clientHeight <= threshold;
+// ======== DETECTAR SI ESTÁ EN EL FONDO ========
+function checkIfAtBottom() {
+    const threshold = 100;
+    const atBottom = messagesWrapper.scrollHeight - messagesWrapper.scrollTop - messagesWrapper.clientHeight <= threshold;
+    isAtBottom = atBottom;
+    return atBottom;
 }
 
 // ======== SCROLL AUTOMÁTICO AL FONDO ========
 function scrollToBottom(smooth = false) {
-    // Asegurar que el scroll llegue realmente al fondo
     const scrollToMaxHeight = () => {
         const maxScroll = messagesWrapper.scrollHeight - messagesWrapper.clientHeight;
-        messagesWrapper.scrollTop = maxScroll;
-        console.log(`[scrollToBottom] Scroll establecido a: ${messagesWrapper.scrollTop}px (max: ${maxScroll}px)`);
+        messagesWrapper.scrollTop = maxScroll + 100;
+        isAtBottom = true;
+        console.log(`[scrollToBottom] Scroll forzado a: ${messagesWrapper.scrollTop}px (target: ${maxScroll}px)`);
     };
 
     if (smooth) {
         messagesWrapper.scrollTo({
-            top: messagesWrapper.scrollHeight,
+            top: messagesWrapper.scrollHeight + 100,
             behavior: 'smooth'
         });
+        setTimeout(() => { 
+            isAtBottom = true; 
+            scrollToMaxHeight();
+        }, 600);
     } else {
         scrollToMaxHeight();
-        // Verificar que realmente llegó al fondo y corregir si es necesario
+        
+        // VERIFICACIÓN TRIPLE
         requestAnimationFrame(() => {
             const currentMax = messagesWrapper.scrollHeight - messagesWrapper.clientHeight;
-            if (messagesWrapper.scrollTop < currentMax - 5) {
-                console.log('[scrollToBottom] Corrigiendo posición...');
+            if (messagesWrapper.scrollTop < currentMax - 10) {
+                console.log('[scrollToBottom] Corrigiendo posición - intento 1');
                 scrollToMaxHeight();
+                
+                // Segundo intento si el primero falló
+                requestAnimationFrame(() => {
+                    if (messagesWrapper.scrollTop < currentMax - 10) {
+                        console.log('[scrollToBottom] Corrigiendo posición - intento 2');
+                        messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
+                    }
+                });
             }
         });
     }
@@ -112,10 +129,8 @@ function renderMessage(msg, addToTop = false) {
     `;
 
     if (addToTop) {
-        // Para historial: agregar ARRIBA (mensajes más antiguos)
         messagesContainer.prepend(div);
     } else {
-        // Para mensajes nuevos: agregar ABAJO (lo más reciente)
         messagesContainer.appendChild(div);
     }
 }
@@ -171,10 +186,18 @@ async function loadUser() {
 
 // ======== CARGAR MENSAJES HISTÓRICOS ========
 async function loadMessages(isInitialLoad = false) {
-    if (loading) return;
+    if (loading) {
+        console.log('[loadMessages] ⏳ Ya está cargando...');
+        return;
+    }
+    
+    if (allLoaded && !isInitialLoad) {
+        console.log('[loadMessages] 🔚 Todo cargado ya');
+        return;
+    }
+    
     loading = true;
-
-    console.log(`[loadMessages] Cargando mensajes... Skip: ${skip}, Inicial: ${isInitialLoad}, AllLoaded: ${allLoaded}`);
+    console.log(`[loadMessages] 📥 Cargando... Skip: ${skip}, Inicial: ${isInitialLoad}`);
 
     try {
         const res = await fetchWithToken(`/api/messages?limit=${limit}&skip=${skip}`);
@@ -182,48 +205,63 @@ async function loadMessages(isInitialLoad = false) {
 
         if (!Array.isArray(msgs)) throw new Error('Formato inesperado');
 
-        // Solo marcar como "todo cargado"
+        console.log(`[loadMessages] 📨 Recibidos: ${msgs.length} mensajes`);
+
+        // SOLO PARAR SI NO HAY MENSAJES
         if (msgs.length === 0) {
             allLoaded = true;
-            console.log('[loadMessages] ✅ No hay más mensajes históricos - fin del historial');
+            console.log('[loadMessages] 🔚 FIN - No hay más mensajes');
             return;
-        }
-        if (msgs.length < limit) {
-            allLoaded = true;
-            console.log('[loadMessages] ⚠️  Última página de mensajes detectada');
         }
 
         skip += msgs.length;
 
         if (isInitialLoad) {
+            // CARGA INICIAL
             const orderedMsgs = msgs.reverse();
+            orderedMsgs.forEach(msg => renderMessage(msg, false));
             
-            orderedMsgs.forEach(msg => {
-                renderMessage(msg, false); // Agregar al fondo
-            });
-            requestAnimationFrame(() => {
-                scrollToBottom();
-            });
+            // SCROLL INICIAL
+            // Múltiples verificaciones para asegurar scroll completo
+            setTimeout(() => {
+                requestAnimationFrame(() => {
+                    scrollToBottom();
+                    console.log('[loadMessages] 📍 Primer scroll inicial');
+                    
+                    // Segunda verificación después de otro frame
+                    requestAnimationFrame(() => {
+                        scrollToBottom();
+                        console.log('[loadMessages] 📍 Segundo scroll inicial');
+                        
+                        // Tercera verificación para estar 100% seguro yia
+                        setTimeout(() => {
+                            scrollToBottom();
+                            console.log('[loadMessages] 📍 Scroll inicial FINAL completado');
+                        }, 100);
+                    });
+                });
+            }, 200); // Mas tiempo para renderizado completo
             
         } else {
-            // Preservar posición actual del usuario
+            // CARGA DE HISTORIAL
             const prevScrollHeight = messagesWrapper.scrollHeight;
+            const prevScrollTop = messagesWrapper.scrollTop;
+            
             const orderedMsgs = msgs.reverse();
+            orderedMsgs.forEach(msg => renderMessage(msg, true));
             
-            orderedMsgs.forEach(msg => {
-                renderMessage(msg, true); // Agregar TOP
-            });
-            
-            // Restaurar posición del scroll
             requestAnimationFrame(() => {
                 const newScrollHeight = messagesWrapper.scrollHeight;
                 const heightDiff = newScrollHeight - prevScrollHeight;
-                messagesWrapper.scrollTop += heightDiff;
+                messagesWrapper.scrollTop = prevScrollTop + heightDiff;
+                console.log(`[loadMessages] Posición restaurada +${heightDiff}px`);
             });
         }
 
+        console.log(`[loadMessages] ✅ Completado. Skip: ${skip}, Total: ${document.querySelectorAll('.message').length}`);
+
     } catch (err) {
-        console.error('[loadMessages] Error al cargar mensajes:', err);
+        console.error('[loadMessages] ❌ Error:', err);
     } finally {
         loading = false;
     }
@@ -231,33 +269,15 @@ async function loadMessages(isInitialLoad = false) {
 
 // ======== GESTIÓN DEL SCROLL ========
 function handleScroll() {
+    checkIfAtBottom();
     isUserScrolling = true;
     if (scrollTimeout) clearTimeout(scrollTimeout);
-    
-    // Detectar fin del scroll manual
-    scrollTimeout = setTimeout(() => {
-        isUserScrolling = false;
-    }, 150);
+    scrollTimeout = setTimeout(() => { isUserScrolling = false; }, 150);
 
-    const scrollTop = messagesWrapper.scrollTop;
-    const scrollHeight = messagesWrapper.scrollHeight;
-    const clientHeight = messagesWrapper.clientHeight;
-
-    // logs de carga
-    if (scrollTop <= 50) {
-        console.log(`[Scroll] 🔝 Cerca del top: ${scrollTop}px`);
-        
-        if (loading) {
-            console.log('[Scroll] ⏳ Ya cargando, esperando...');
-        } else if (allLoaded) {
-            console.log('[Scroll] 🔚 Todo cargado, no hay más historial');
-        } else {
-            console.log(`[Scroll] 🚀 TRIGGER! Cargando historial... (ScrollTop: ${scrollTop}px, Loading: ${loading}, AllLoaded: ${allLoaded})`);
-            loadMessages(false);
-        }
-    }
-    if (Math.random() < 0.1) {
-        console.log(`[Scroll] 📊 Estado: Top=${scrollTop}px, Height=${scrollHeight}px, Client=${clientHeight}px, Skip=${skip}, Loading=${loading}, AllLoaded=${allLoaded}`);
+    // Cargar historial si está arriba
+    if (messagesWrapper.scrollTop <= 50 && !loading && !allLoaded) {
+        console.log(`[Scroll] 📜 Cargando historial... Top: ${messagesWrapper.scrollTop}px`);
+        loadMessages(false);
     }
 }
 
@@ -296,12 +316,17 @@ function connectSocket() {
 
     socket.on('chat message', (msg) => {
         console.log('[Socket] Mensaje recibido:', msg);
-        const shouldAutoScroll = isNearBottom(150) && !isUserScrolling;
+        const shouldAutoScroll = isAtBottom && !loading;
+        
         renderMessage(msg, false);
+        
         if (shouldAutoScroll) {
+            console.log('[Socket] 📍 Auto-scroll activado');
             requestAnimationFrame(() => {
                 scrollToBottom();
             });
+        } else {
+            console.log('[Socket] 🚫 Auto-scroll desactivado - usuario leyendo historial');
         }
     });
 
@@ -321,18 +346,30 @@ async function initializeChat() {
     setupUI();
     
     await loadUser();
-    await loadMessages(true); // Carga inicial
+    await loadMessages(true);
     setTimeout(() => {
-        if (messagesWrapper.scrollTop < messagesWrapper.scrollHeight - messagesWrapper.clientHeight - 50) {
-            console.log('[Init] 🔧 Corrección final del scroll inicial...');
-            scrollToBottom();
-        }
-    }, 200);
+        console.log('[Init] 🔧 Verificación final del scroll...');
+        scrollToBottom();
+        
+        // Última verificación después de 1 segundo
+        setTimeout(() => {
+            const currentScroll = messagesWrapper.scrollTop;
+            const maxScroll = messagesWrapper.scrollHeight - messagesWrapper.clientHeight;
+            
+            if (currentScroll < maxScroll - 20) {
+                console.log('[Init] 🚨 Corrección FINAL del scroll - forzando posición');
+                messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
+                isAtBottom = true;
+            }
+            
+            console.log(`[Init] ✅ Scroll final: ${messagesWrapper.scrollTop}px de ${maxScroll}px`);
+        }, 1000);
+    }, 500);
     
     connectSocket();
     
     console.log('[Init] Chat inicializado correctamente ✅');
 }
 
-// Inicializar todo
+// Inicializar todo QUE ANDE ESTA MIERDAAAAA
 initializeChat();

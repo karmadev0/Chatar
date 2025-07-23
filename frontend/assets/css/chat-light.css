@@ -1,34 +1,37 @@
-/* ==== Reset básico ==== */
+/* ===== VARIABLES ===== */
+:root {
+  --bg-dark: #f5f5f5;
+  --bg-darker: #eaeaea;
+  --bg-elements: #ffffff;
+  --bg-cards: #f0f0f0;
+  --accent-color: #4caf50;
+  --danger-color: #c62828;
+  --text-primary: #111;
+  --text-secondary: #444;
+  --text-muted: #777;
+  --border-color: #ccc;
+}
+
+/* ===== RESET BÁSICO ===== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* ==== Variables ==== */
-:root {
-  --bg-main: #ffffff;
-  --bg-elements: #e0e0e0;
-  --bg-cards: #eeeeee;
-  --bg-darker: #fdfdfd;
-  --border-color: #ccc;
-  --accent-color: #4caf50;
-  --text-primary: #121212;
-  --text-muted: #666;
-}
-
-/* ==== Estilos generales ==== */
+/* ===== ESTRUCTURA PRINCIPAL ===== */
 body {
   font-family: 'Segoe UI', sans-serif;
-  background-color: #f9f9f9;
+  background-color: var(--bg-dark);
   color: var(--text-primary);
   height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
-/* ==== Topbar ==== */
+/* ===== TOPBAR ===== */
 #topbar {
   position: fixed;
   top: 0;
@@ -41,15 +44,22 @@ body {
   background: var(--bg-elements);
   padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--border-color);
-  }
+  height: 3.5rem;
+}
 
-#topbar img#avatar { width:32px; height:32px; border-radius:50%; }
+#topbar img#avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 #topbar #username {
   flex: 1;
   margin-left: 1rem;
   font-weight: bold;
-  color: var(--text-primary);
 }
+
 #topbar #menu-toggle {
   background: none;
   border: none;
@@ -58,14 +68,14 @@ body {
   cursor: pointer;
 }
 
-/* ==== Sidebar ==== */
+/* ===== SIDEBAR ===== */
 #sidebar {
   position: fixed;
   top: 0;
   left: 0;
   width: 80%;
   height: 100%;
-  background: #ffffff;
+  background: var(--bg-darker);
   color: var(--text-primary);
   padding: 1rem;
   z-index: 300;
@@ -74,109 +84,182 @@ body {
   overflow-y: auto;
 }
 
-#sidebar.active { transform: translateX(0); }
-#sidebar .sidebar-inner { display: flex; flex-direction: column; gap:1rem; }
+#sidebar.active {
+  transform: translateX(0);
+}
+
+#sidebar .sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 #sidebar section {
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 1rem;
 }
-#sidebar h2 { margin-bottom:.5rem; font-size:1.2rem; color:#555; }
-#sidebar button {
-  background: #e8e8e8;
-  color: var(--text-primary);
-  border: none;
-  padding: .5rem;
-  margin-top:.4rem;
-  border-radius:4px;
-  cursor:pointer;
-}
-#sidebar button:disabled { opacity:.4; cursor:not-allowed; }
-#sidebar button.logout {
-  background:#c62828; color:#fff; margin-top:2rem;
+
+#sidebar h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
 }
 
-/* ==== Chat container ==== */
+#sidebar button {
+  background: var(--bg-cards);
+  color: var(--text-primary);
+  border: none;
+  padding: 0.5rem;
+  margin-top: 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#sidebar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#sidebar button.logout {
+  background: var(--danger-color);
+  color: #fff;
+  margin-top: 2rem;
+}
+
+/* ===== CHAT CONTAINER ===== */
 #chat-container {
   flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  padding-top: 3.5rem;
   display: flex;
-  flex-direction: column-reverse;
-  gap: .5rem;
+  flex-direction: column;
+  padding-top: 3.5rem;
+  padding-bottom: 4rem;
+  overflow: hidden;
+  position: relative;
 }
+
+/* Contenedor de mensajes con scroll */
+#messages-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  scroll-behavior: smooth;
+}
+
+/* Lista de mensajes dentro del wrapper */
 #messages {
   display: flex;
   flex-direction: column;
-  gap: .5rem;
-}
-.message {
-  display: flex;
-  align-items: flex-start;
-  gap: .6rem;
-  background: var(--bg-cards);
-  padding: .6rem;
-  border-radius:8px;
-  max-width:80%;
-  word-wrap:break-word;
-}
-.message .avatar {
-  width:32px; height:32px;
-  border-radius:50%;
-  flex-shrink:0;
-}
-.message-content {
-  display:flex; flex-direction:column;
-  word-break:break-word;
-  overflow-wrap:break-word;
-}
-.message-header {
-  display:flex; align-items:center; gap:.5rem;
-  font-weight:bold;
-}
-.message-time {
-  font-size:.75rem;
-  color:var(--text-muted);
+  gap: 0.5rem;
+  min-height: min-content;
+  padding-bottom: 4rem;
 }
 
-/* ==== NUEVO: Contenedor del formulario de mensaje ==== */
+/* ===== MENSAJES ===== */
+.message {
+  background: var(--bg-cards);
+  padding: 0.8rem;
+  border-radius: 8px;
+  max-width: 90%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Header del mensaje (avatar + username + timestamp) */
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.message-header .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.message-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.message-info strong {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.message-header .timestamp {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Contenido del mensaje */
+.message-content {
+  margin: 0;
+  line-height: 1.4;
+  color: var(--text-primary);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Enlaces dentro de mensajes */
+.message-content a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.message-content a:hover {
+  text-decoration: underline;
+}
+
+/* ===== FORMULARIO DE MENSAJE ===== */
 #input-container {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  z-index: 110;
   background: var(--bg-elements);
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
+  padding: 0.8rem 1rem;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+  z-index: 110;
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
 }
 
-/* ==== Formulario de mensaje dentro del contenedor ==== */
 #message-form {
-  display:flex;
-  padding: .5rem 1rem;
-  gap: .5rem;
-  border-top: none;
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
 }
 
-/* Input y botón dentro del form */
 #message-input {
-  flex:1;
-  padding:.6rem;
-  border-radius:4px;
-  border:1px solid var(--border-color);
-  background:#fff;
+  flex: 1;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 4px;
+  background: var(--bg-dark);
   color: var(--text-primary);
 }
+
 #message-form button {
   background: var(--accent-color);
   color: white;
   border: none;
   padding: 0 1rem;
-  border-radius:4px;
-  cursor:pointer;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-/* ==== Menús laterales ==== */
+/* ===== MENÚS LATERALES ===== */
 .menu {
   position: fixed;
   top: 0;
@@ -184,59 +267,94 @@ body {
   width: 80%;
   height: 100%;
   background: var(--bg-darker);
-  color: var(--text-primary);
+  color: #fff;
   transform: translateX(100%);
   transition: transform 0.3s ease;
   z-index: 400;
   padding: 1rem;
   overflow-y: auto;
 }
-.menu.visible { transform: translateX(0); }
-/* Botón cerrar menú */
+
+.menu.visible {
+  transform: translateX(0);
+}
+
+/* ===== BOTÓN CERRAR MENÚ ===== */
 .menu-close {
   background: none;
   border: none;
-  color: #777;
+  color: #aaa;
   font-size: 1.2rem;
   position: absolute;
-  top:1rem; right:1rem;
+  top: 1rem;
+  right: 1rem;
   cursor: pointer;
 }
 
-/* ==== Overlay ==== */
+/* ===== OVERLAY ===== */
 #overlay {
   position: fixed;
-  top:0; left:0;
-  width:100vw; height:100vh;
-  background: rgba(0,0,0,0.3);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
   opacity: 0;
   visibility: hidden;
-  z-index: 150;
-  transition: opacity .3s ease, visibility .3s ease;
   pointer-events: none;
-}
+  z-index: 250;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
 #overlay.visible {
-  opacity:1;
-  visibility:visible;
+  opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
 
-/* ==== Corrección avatars ==== */
+/* ==== AVATARES ==== */
 img.avatar {
-  width:42px; height:42px;
-  border-radius:50%;
-  object-fit:cover;
-  object-position:center;
-}
-img.avatar-large {
-  width:100px;height:100px;
-  border-radius:50%;
-  object-fit:cover;
-  object-position:center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
 }
 
-/* ==== Responsive ==== */
-@media (min-width: 768px) {
-  #sidebar { width:300px; }
-  .menu { width:400px; }
+img.avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
 }
+
+/* ===== SCROLLBAR PERSONALIZADO ===== */
+#messages-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+#messages-wrapper::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+#messages-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+#messages-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (min-width: 768px) {
+  #sidebar {
+    width: 300px;
+  }
+
+  .menu {
+    width: 400px;
+  }
+}
+
