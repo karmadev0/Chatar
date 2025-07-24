@@ -57,9 +57,17 @@
       <div id="messages"></div>
     </div>
 
+    <!-- Indicador de usuarios escribiendo -->
     <div id="typing-indicator" class="hidden">
 	    <span class="dots">...</span>
 	    <span class="names">Alguien está escribiendo</span>
+    </div>
+
+    <!-- Preview de reply -->
+    <div id="reply-preview" class="hidden">
+      <span class="arrow">➜</span>
+      Respondiendo a <span class="reply-author"></span>: <span class="reply-text"></span>
+      <button id="cancel-reply">✕</button>
     </div>
 
     <!-- Formulario de envío -->

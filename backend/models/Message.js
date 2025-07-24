@@ -12,6 +12,11 @@ const messageSchema = new mongoose.Schema({
     trim: true,
     maxlength: 1000
   },
+  replyTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message',
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { saveMessage } from '../controllers/message.controller.js';
 import { User } from '../models/User.js';
 
-const typingUsers = new Map(); // socket.id -> { username, timeout }
+const typingUsers = new Map(); // socket.id
 
 export function configureChatSocket(io) {
   io.use(async (socket, next) => {
@@ -37,12 +37,10 @@ export function configureChatSocket(io) {
       if (!socket.user) return;
 
       if (isTyping) {
-        // Si ya estaba escribiendo, reseteamos su timeout
         if (typingUsers.has(socket.id)) {
           clearTimeout(typingUsers.get(socket.id).timeout);
         }
 
-        // Seteamos nuevo timeout de 3 segundos
         const timeout = setTimeout(() => {
           typingUsers.delete(socket.id);
           io.emit('typing', Array.from(typingUsers.values()).map(u => u.username));
@@ -62,16 +60,17 @@ export function configureChatSocket(io) {
     // ---- MENSAJES ----
     socket.on('chat message', async (data) => {
       if (!socket.user || socket.user.isBanned) return;
-      const text = typeof data === 'string' ? data : data.text;
+      
+      const text = typeof data === 'object' ? data.text : data;
+      const replyTo = typeof data === 'object' ? data.replyTo : null;
       const tempId = typeof data === 'object' ? data.tempId : null;
 
-      const saved = await saveMessage(socket.user.id, text);
+      const saved = await saveMessage(socket.user.id, text, replyTo);
       if (saved) {
         if (tempId) saved.tempId = tempId;
         io.emit('chat message', saved);
       }
 
-      // Eliminar de typing al enviar mensaje
       if (typingUsers.has(socket.id)) {
         clearTimeout(typingUsers.get(socket.id).timeout);
         typingUsers.delete(socket.id);

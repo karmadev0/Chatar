@@ -15,6 +15,8 @@ const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 const typingIndicator = document.getElementById('typing-indicator');
 const renderedMessages = new Set();
+const replyPreview = document.getElementById('reply-preview');
+let replyTo = null;
 
 // ======== VARIABLES GLOBALES ========
 let socket;
@@ -45,7 +47,7 @@ function linkify(text) {
 }
 
 function softenLongWords(text, maxLen = 60) {
-    return text.replace(new RegExp(`(\\S{${maxLen}})`, 'g'), '$1\u200B');
+    return text.replace(new RegExp(`(\\S{${maxLen}})`, 'g'), '$1​');
 }
 
 function checkIfAtBottom() {
@@ -56,12 +58,12 @@ function checkIfAtBottom() {
 
 function scrollToBottom(smooth = false) {
     const scrollToMaxHeight = () => {
-        messagesWrapper.scrollTop = messagesWrapper.scrollHeight + 100;
+        messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
         isAtBottom = true;
     };
 
     if (smooth) {
-        messagesWrapper.scrollTo({ top: messagesWrapper.scrollHeight + 100, behavior: 'smooth' });
+        messagesWrapper.scrollTo({ top: messagesWrapper.scrollHeight, behavior: 'smooth' });
         setTimeout(scrollToMaxHeight, 600);
     } else {
         scrollToMaxHeight();
@@ -85,17 +87,29 @@ function renderMessage(msg, addToTop = false) {
     if (renderedMessages.has(msgId)) return;
     renderedMessages.add(msgId);
 
-    let content = softenLongWords(msg.text);
-    content = linkify(content);
-
     const div = document.createElement('div');
     div.className = 'message';
     div.setAttribute('data-id', msgId);
+    if (msg.replyTo) div.classList.add('reply');
 
+    const body = [];
+    // preview de reply con flecha
+    if (msg.replyTo) {
+        const { username: repliedName, text: repliedText } = msg.replyTo;
+        body.push(`
+            <div class="reply-preview">
+                <span class="arrow">➜</span>
+                <strong>${repliedName}</strong>: ${repliedText.length > 32 ? repliedText.slice(0,32) + '...' : repliedText}
+            </div>
+        `);
+    }
+
+    const content = softenLongWords(msg.text);
+    const linkContent = linkify(content);
     const time = new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     const avatar = msg.avatarURL || '/assets/image/default.jpg';
 
-    div.innerHTML = `
+    body.push(`
         <div class="message-header">
             <img src="${avatar}" class="avatar" />
             <div class="message-info">
@@ -103,14 +117,34 @@ function renderMessage(msg, addToTop = false) {
                 <span class="timestamp">${time}</span>
             </div>
         </div>
-        <p class="message-content">${content}</p>
-    `;
+        <p class="message-content">${linkContent}</p>
+    `);
 
-    if (addToTop) {
-        messagesContainer.prepend(div);
-    } else {
-        messagesContainer.appendChild(div);
+    div.innerHTML = body.join('');
+
+    // doble click para reply
+    div.addEventListener('dblclick', () => activateReply(msg));
+    // TODO: swipe detection si se quiere
+
+    if (addToTop) messagesContainer.prepend(div);
+    else messagesContainer.appendChild(div);
+}
+
+function activateReply(msg) {
+    replyTo = { id: msg._id, username: msg.username, text: msg.text };
+    if (replyPreview) {
+        replyPreview.innerHTML = `
+            <span class="dots"></span>
+            Respondiendo a <strong>${replyTo.username}</strong>: ${replyTo.text.length > 32 ? replyTo.text.slice(0,32) + '...' : replyTo.text}
+        `;
+        replyPreview.classList.remove('hidden');
     }
+    messageInput.focus();
+}
+
+function clearReply() {
+    replyTo = null;
+    if (replyPreview) replyPreview.classList.add('hidden');
 }
 
 // ======== ENVÍO DE MENSAJES ========
@@ -119,15 +153,14 @@ messageForm.addEventListener('submit', (e) => {
     if (!canSend) return;
     const text = messageInput.value.trim();
     if (!text) return;
-    if (text.length > 1024) {
-        alert('El mensaje no puede superar los 1024 caracteres.');
-        return;
-    }
+    if (text.length > 1024) { alert('El mensaje no puede superar los 1024 caracteres.'); return; }
 
-    socket.emit('chat message', text);
+    const payload = replyTo ? { text, replyTo: replyTo.id } : { text };
+    socket.emit('chat message', payload);
     messageInput.value = '';
+    clearReply();
     canSend = false;
-    setTimeout(() => { canSend = true; }, 1000);
+    setTimeout(() => canSend = true, 1000);
 });
 
 // ======== USUARIO ACTUAL ========
@@ -280,4 +313,3 @@ async function initializeChat() {
 }
 
 initializeChat();
-
