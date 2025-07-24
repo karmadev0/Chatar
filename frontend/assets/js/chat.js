@@ -303,6 +303,12 @@ logoutBtn.addEventListener('click', () => {
     window.location.href = '/index.html';
 });
 
+if (replyPreview) {
+    replyPreview.addEventListener('click', () => {
+        clearReply();
+    });
+}
+
 // ======== INICIALIZACIÓN ========
 async function initializeChat() {
     applyTheme();
