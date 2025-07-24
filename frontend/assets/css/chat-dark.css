@@ -10,6 +10,7 @@
   --text-secondary: #ccc;
   --text-muted: #888;
   --border-color: #333;
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ===== RESET BÁSICO ===== */
@@ -132,7 +133,6 @@ body {
   display: flex;
   flex-direction: column;
   padding-top: 3.5rem;
-  padding-bottom: 4rem;
   overflow: hidden;
   position: relative;
 }
@@ -145,6 +145,9 @@ body {
   flex-direction: column;
   padding: 1rem;
   scroll-behavior: smooth;
+  padding-bottom: calc(7rem + var(--safe-area-inset-bottom));
+  box-sizing: border-box;
+  z-index: 1;
 }
 
 /* Lista de mensajes dentro del wrapper */
@@ -223,7 +226,7 @@ body {
 /* ===== FORMULARIO DE MENSAJE ===== */
 #input-container {
   position: fixed;
-  bottom: 0;
+  bottom: var(--safe-area-inset-bottom);
   left: 0;
   width: 100%;
   background: var(--bg-elements);
@@ -361,8 +364,8 @@ img.avatar-large {
 /* PUNTOS SUSPENSIVOS YIAAAA */
 
 #typing-indicator {
-  position: absolute;
-  top: 0;
+  position: fixed;
+  bottom: calc(4rem + var(--safe-area-inset-bottom));
   left: 0;
   width: 100%;
   padding: 0.3rem 1rem;
