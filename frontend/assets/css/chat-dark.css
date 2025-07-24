@@ -96,6 +96,38 @@ body {
   gap: 1rem;
 }
 
+#sidebar section {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+#sidebar h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+#sidebar button {
+  background: var(--bg-cards);
+  color: var(--text-primary);
+  border: none;
+  padding: 0.5rem;
+  margin-top: 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#sidebar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#sidebar button.logout {
+  background: var(--danger-color);
+  color: #fff;
+  margin-top: 2rem;
+}
+
 /* ===== CHAT CONTAINER ===== */
 #chat-container {
   flex: 1;
@@ -119,11 +151,13 @@ body {
   z-index: 1;
 }
 
+/* Lista de mensajes dentro del wrapper */
 #messages {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   min-height: min-content;
+  padding-bottom: 4rem;
 }
 
 /* ===== MENSAJES ===== */
@@ -136,7 +170,7 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Header del mensaje */
+/* Header del mensaje (avatar + username + timestamp) */
 .message-header {
   display: flex;
   align-items: center;
@@ -171,15 +205,16 @@ body {
   white-space: nowrap;
 }
 
-/* Contenido */
+/* Contenido del mensaje */
 .message-content {
   margin: 0;
   line-height: 1.4;
   color: var(--text-primary);
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 
-/* Enlaces */
+/* Enlaces dentro de mensajes */
 .message-content a {
   color: var(--accent-color);
   text-decoration: none;
@@ -330,6 +365,76 @@ body {
   cursor: pointer;
 }
 
+/* ===== MENÚS LATERALES ===== */
+.menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 80%;
+  height: 100%;
+  background: var(--bg-darker);
+  color: #fff;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 400;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.menu.visible {
+  transform: translateX(0);
+}
+
+/* ===== BOTÓN CERRAR MENÚ ===== */
+.menu-close {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.2rem;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  cursor: pointer;
+}
+
+/* ===== OVERLAY ===== */
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 250;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ==== AVATARES ==== */
+img.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
+img.avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (min-width: 768px) {
   #sidebar {
@@ -344,13 +449,16 @@ body {
 #messages-wrapper::-webkit-scrollbar {
   width: 6px;
 }
+
 #messages-wrapper::-webkit-scrollbar-track {
   background: var(--bg-dark);
 }
+
 #messages-wrapper::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 3px;
 }
+
 #messages-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
