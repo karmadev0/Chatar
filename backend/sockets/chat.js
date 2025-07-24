@@ -1,80 +1,92 @@
-// backend/sockets/chat.js
-
 import jwt from 'jsonwebtoken';
 import { saveMessage } from '../controllers/message.controller.js';
 import { User } from '../models/User.js';
 
+const typingUsers = new Map(); // socket.id -> { username, timeout }
+
 export function configureChatSocket(io) {
-  // Middleware de autenticación
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
-
-    if (!token) {
-      console.warn('[socket] Token no proporcionado');
-      return next(new Error('Token requerido'));
-    }
+    if (!token) return next(new Error('Token requerido'));
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.id);
-
-      if (!user) {
-        return next(new Error('Usuario no encontrado'));
-      }
-
-      if (user.isBanned) {
-        console.warn('[socket] Usuario baneado intentando conectar:', user.username);
-        return next(new Error('Usuario baneado'));
-      }
-
+      if (!user) return next(new Error('Usuario no encontrado'));
+      if (user.isBanned) return next(new Error('Usuario baneado'));
       socket.user = user;
       next();
-
-    } catch (err) {
-      console.warn('[socket] Token inválido');
+    } catch {
       return next(new Error('Token inválido'));
     }
   });
 
-  // Conexión socket activa
   io.on('connection', (socket) => {
     console.log('[socket] Cliente conectado:', socket.id, 'Usuario:', socket.user.username);
 
-    // Intervalo de verificación en tiempo real (cada 10s)
     const banCheckInterval = setInterval(async () => {
-      try {
-        const refreshed = await User.findById(socket.user._id);
-        if (refreshed?.isBanned) {
-          console.warn(`[socket] Usuario baneado en vivo: ${refreshed.username}`);
-          socket.emit('banned');
-          socket.disconnect();
-        }
-      } catch (err) {
-        console.error('[socket] Error al verificar estado de ban:', err);
+      const refreshed = await User.findById(socket.user._id);
+      if (refreshed?.isBanned) {
+        socket.emit('banned');
+        socket.disconnect();
       }
-    }, 10000); // cada 10 segundos
+    }, 10000);
 
-    // Mensajes
+    // ---- TYPING ----
+    socket.on('typing', (isTyping) => {
+      if (!socket.user) return;
+
+      if (isTyping) {
+        // Si ya estaba escribiendo, reseteamos su timeout
+        if (typingUsers.has(socket.id)) {
+          clearTimeout(typingUsers.get(socket.id).timeout);
+        }
+
+        // Seteamos nuevo timeout de 3 segundos
+        const timeout = setTimeout(() => {
+          typingUsers.delete(socket.id);
+          io.emit('typing', Array.from(typingUsers.values()).map(u => u.username));
+        }, 3000);
+
+        typingUsers.set(socket.id, { username: socket.user.username, timeout });
+      } else {
+        if (typingUsers.has(socket.id)) {
+          clearTimeout(typingUsers.get(socket.id).timeout);
+          typingUsers.delete(socket.id);
+        }
+      }
+
+      io.emit('typing', Array.from(typingUsers.values()).map(u => u.username));
+    });
+
+    // ---- MENSAJES ----
     socket.on('chat message', async (data) => {
       if (!socket.user || socket.user.isBanned) return;
-
-      console.log('[Servidor] ha llegado un mensaje a sockets');
-
       const text = typeof data === 'string' ? data : data.text;
       const tempId = typeof data === 'object' ? data.tempId : null;
 
       const saved = await saveMessage(socket.user.id, text);
-
       if (saved) {
         if (tempId) saved.tempId = tempId;
         io.emit('chat message', saved);
       }
+
+      // Eliminar de typing al enviar mensaje
+      if (typingUsers.has(socket.id)) {
+        clearTimeout(typingUsers.get(socket.id).timeout);
+        typingUsers.delete(socket.id);
+        io.emit('typing', Array.from(typingUsers.values()).map(u => u.username));
+      }
     });
 
-    // Desconexión
+    // ---- DESCONECTAR ----
     socket.on('disconnect', () => {
       clearInterval(banCheckInterval);
-      console.log('[socket] Cliente desconectado:', socket.id);
+      if (typingUsers.has(socket.id)) {
+        clearTimeout(typingUsers.get(socket.id).timeout);
+        typingUsers.delete(socket.id);
+        io.emit('typing', Array.from(typingUsers.values()).map(u => u.username));
+      }
     });
   });
 }

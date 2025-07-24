@@ -357,3 +357,40 @@ img.avatar-large {
     width: 400px;
   }
 }
+
+/* PUNTOS SUSPENSIVOS YIAAAA */
+
+#typing-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 0.3rem 1rem;
+  background: var(--bg-elements);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  z-index: 105;
+}
+
+#typing-indicator.hidden {
+  display: none;
+}
+
+#typing-indicator .dots::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  animation: dots-typing 1s infinite linear;
+}
+
+@keyframes dots-typing {
+  0% { width: 4px; }
+  50% { width: 12px; }
+  100% { width: 4px; }
+}
