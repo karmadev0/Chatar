@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="oscuro">
-<head>                                                                                                                  
-  <meta charset="UTF-8" />                                                                                              
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />                                              
-  <title>Ajustes de Usuario</title>                                                                                     
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <title>Ajustes de Usuario</title>
   <link id="theme-link" rel="stylesheet" href="./assets/css/chat-dark.css" />
   <link rel="stylesheet" href="./assets/css/settings.css" />
 </head>
@@ -14,7 +16,7 @@
     <section class="setting-block">
       <h2>Avatar</h2>
       <img id="current-avatar" src="/assets/image/default.jpg" alt="Avatar actual" class="avatar-preview" />
-      <input type="file" id="avatar-input" accept="image/*" />                                                              
+      <input type="file" id="avatar-input" accept="image/*" />
       <button id="upload-avatar">Subir nuevo avatar</button>
     </section>
 
