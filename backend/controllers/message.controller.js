@@ -1,6 +1,7 @@
 import { Message } from '../models/Message.js';
 import { User } from '../models/User.js';
 import { sendPushNotification } from '../notifications.js';
+import mongoose from 'mongoose';
 
 // Función para extraer menciones del texto
 function extractMentions(text) {
@@ -16,35 +17,44 @@ function extractMentions(text) {
 }
 
 export async function saveMessage(userId, text, replyTo = null) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     // Extraer menciones del texto
     const mentionUsernames = extractMentions(text);
     const mentions = [];
     
-    // Buscar usuarios mencionados
+    // Buscar usuarios mencionados (con sus preferencias de notificación)
     if (mentionUsernames.length > 0) {
       const mentionedUsers = await User.find({
         username: { $in: mentionUsernames },
         isBanned: false
-      }).select('_id username');
+      })
+      .session(session)
+      .select('_id username notificationSettings pushSubscription');
       
       for (const user of mentionedUsers) {
         mentions.push({
           userId: user._id,
-          username: user.username
+          username: user.username,
+          wantsPush: user.notificationSettings?.pushEnabled && user.pushSubscription
         });
       }
-    }	
+    }
 
     // Crear el mensaje
     const message = new Message({
       userId,
       text,
       replyTo,
-      mentions
+      mentions: mentions.map(m => ({
+        userId: m.userId,
+        username: m.username
+      }))
     });
 
-    const saved = await message.save();
+    const saved = await message.save({ session });
 
     // Poblar datos del usuario y reply
     const populated = await Message.findById(saved._id)
@@ -52,35 +62,58 @@ export async function saveMessage(userId, text, replyTo = null) {
       .populate({
         path: 'replyTo',
         populate: { path: 'userId', select: 'username' }
-      });
+      })
+      .session(session);
 
-    // Crear notificaciones para usuarios mencionados
+    // Procesar notificaciones para usuarios mencionados
     if (mentions.length > 0) {
-      const fromUser = await User.findById(userId).select('username');
+      const fromUser = await User.findById(userId)
+        .session(session)
+        .select('username avatarURL');
       
-      for (const mention of mentions) {
-        // Verificar si el usuario tiene las notificaciones activadas
-        const targetUser = await User.findById(mention.userId).select('notificationSettings');
-        
-        if (targetUser?.notificationSettings?.mentions !== false) {
-          await User.findByIdAndUpdate(
-            mention.userId,
-            {
-              $push: {
-                mentions: {
-                  messageId: saved._id,
-                  fromUser: userId,
-                  fromUsername: fromUser.username,
-                  text: text.substring(0, 100), // Primeros 100 caracteres
-                  createdAt: new Date(),
-                  isRead: false
+      await Promise.all(
+        mentions.map(async (mention) => {
+          if (mention.userId.toString() !== userId.toString()) {
+            // Guardar mención en el usuario
+            await User.findByIdAndUpdate(
+              mention.userId,
+              {
+                $push: {
+                  mentions: {
+                    messageId: saved._id,
+                    fromUser: userId,
+                    fromUsername: fromUser.username,
+                    text: text.substring(0, 100),
+                    createdAt: new Date(),
+                    isRead: false
+                  }
                 }
-              }
+              },
+              { session }
+            );
+
+            // Enviar notificación push si está habilitado
+            if (mention.wantsPush) {
+              await sendPushNotification(
+                mention.pushSubscription,
+                {
+                  title: `${fromUser.username} te mencionó`,
+                  body: text.length > 100 ? text.substring(0, 100) + '...' : text,
+                  url: `/chat.html?messageId=${saved._id}`,
+                  icon: fromUser.avatarURL || '/icon-192x192.png',
+                  messageId: saved._id
+                },
+                mention.userId
+              ).catch(err => {
+                console.error(`Error enviando push a ${mention.userId}:`, err);
+              });
             }
-          );
-        }
-      }
+          }
+        })
+      );
     }
+
+    await session.commitTransaction();
 
     // Formatear respuesta
     const response = {
@@ -89,7 +122,11 @@ export async function saveMessage(userId, text, replyTo = null) {
       username: populated.userId.username,
       avatarURL: populated.userId.avatarURL,
       createdAt: populated.createdAt,
-      mentions: populated.mentions
+      mentions: populated.mentions,
+      // Para Socket.IO
+      socketData: {
+        mentions: mentions.map(m => m.userId.toString())
+      }
     };
 
     if (populated.replyTo) {
@@ -100,9 +137,13 @@ export async function saveMessage(userId, text, replyTo = null) {
     }
 
     return response;
+
   } catch (err) {
+    await session.abortTransaction();
     console.error('Error saving message:', err);
-    return null;
+    throw err; // Mejor lanzar el error para manejarlo en la ruta
+  } finally {
+    session.endSession();
   }
 }
 
@@ -139,6 +180,6 @@ export async function getMessages(limit = 32, skip = 0) {
     });
   } catch (err) {
     console.error('Error getting messages:', err);
-    return [];
+    throw err; // Propagar el error para manejo consistente
   }
 }

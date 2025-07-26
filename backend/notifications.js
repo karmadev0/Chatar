@@ -1,60 +1,125 @@
 import webpush from 'web-push';
-import { User } from './models/User.js'; // Asegúrate de importar tu modelo User
+import { User } from './models/User.js';
 
-// Configuración VAPID (mejor práctica: usa variables de entorno)
-const vapidKeys = {
-  subject: 'mailto:tu@email.com',
-  publicKey: 'BHvRcnpdYwT_3ZO66SNatTYjAfaG8uMoCITtdkv7XYMkLpY2YUw7m3V087VP8Bzx1C7s8k-JGKUQwSDfexsvImU',
-  privateKey: 'aO5aM9VQMBkYWW-JCExLBvPlW4MxjeFUCeJnwKF8A68'
-};
-
+// Configuración VAPID (usa tus claves actuales)
 webpush.setVapidDetails(
-  vapidKeys.subject,
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
+  'mailto:soporte@tudominio.com',
+  process.env.VAPID_PUBLIC_KEY || 'BHvRcnpdYwT_3ZO66SNatTYjAfaG8uMoCITtdkv7XYMkLpY2YUw7m3V087VP8Bzx1C7s8k-JGKUQwSDfexsvImU',
+  process.env.VAPID_PRIVATE_KEY || 'aO5aM9VQMBkYWW-JCExLBvPlW4MxjeFUCeJnwKF8A68'
 );
 
 /**
- * Envía una notificación push y maneja errores avanzados
- * @param {Object} subscription - Suscripción del usuario
- * @param {Object} payload - Contenido de la notificación
- * @param {string} [userId] - ID del usuario (opcional para manejo de errores)
+ * Envía notificaciones push con manejo avanzado de errores
+ * @param {Object} subscription - Datos de suscripción del usuario
+ * @param {Object} options - Opciones de la notificación
+ * @param {string} [userId] - ID del usuario (opcional para limpieza de suscripciones)
  */
-export async function sendPushNotification(subscription, payload, userId = null) {
+export async function sendPushNotification(subscription, options = {}, userId = null) {
+  // Validación básica
+  if (!subscription?.endpoint) {
+    console.error('❌ Error: Suscripción inválida');
+    return { success: false, error: 'Invalid subscription' };
+  }
+
   try {
-    // Validación básica
-    if (!subscription?.endpoint || !payload) {
-      throw new Error('Suscripción o payload inválidos');
-    }
+    // Payload optimizado para notificaciones de chat
+    const payload = {
+      title: options.title || 'Nueva mención',
+      body: typeof options.body === 'string' 
+        ? (options.body.length > 100 ? options.body.substring(0, 100) + '...' : options.body)
+        : 'Tienes una nueva mención',
+      icon: options.icon || '/icon-192x192.png',
+      badge: '/badge.png',
+      vibrate: [200, 100, 200],
+      data: {
+        url: options.url ? `${options.url}${options.url.includes('?') ? '&' : '?'}ref=push` 
+                         : 'https://chatar-m466.onrender.com/chat.html?ref=push',
+        userId: options.userId,
+        messageId: options.messageId
+      },
+      actions: options.actions || [
+        {
+          action: 'view',
+          title: 'Abrir chat'
+        }
+      ]
+    };
 
-    // Enviar notificación
-    await webpush.sendNotification(subscription, JSON.stringify({
-      title: payload.title || 'Nueva notificación',
-      body: payload.body || 'Tienes una actualización',
-      url: payload.url || '/',
-      icon: payload.icon || '/icon-192x192.png',
-      // Campos adicionales para el SW
-      timestamp: Date.now()
-    }));
+    // Configuración de envío
+    const sendOptions = {
+      contentEncoding: 'aes128gcm', // Estándar actual
+      TTL: 24 * 60 * 60, // 24 horas de vida
+      urgency: 'high' // Prioridad alta
+    };
 
-    console.log(`📩 Notificación enviada a ${userId || 'usuario'}`, {
+    await webpush.sendNotification(subscription, JSON.stringify(payload), sendOptions);
+
+    console.log(`✅ Notificación enviada a ${userId || 'usuario'}`, {
+      title: payload.title,
       endpoint: subscription.endpoint.slice(0, 30) + '...'
     });
 
+    return { success: true };
+
   } catch (err) {
-    console.error(`❌ Error enviando notificación a ${userId || 'usuario'}:`, {
+    console.error(`❌ Error en notificación a ${userId || 'usuario'}:`, {
       error: err.message,
       statusCode: err.statusCode,
-      endpoint: subscription?.endpoint
+      endpoint: subscription.endpoint
     });
 
     // Manejo específico de errores
-    if (err.statusCode === 410 && userId) { // Suscripción expirada
+    if (err.statusCode === 410 && userId) {
       await User.findByIdAndUpdate(userId, {
         $unset: { pushSubscription: 1 },
         $set: { 'notificationSettings.pushEnabled': false }
       });
       console.log(`♻️ Suscripción eliminada para usuario ${userId}`);
     }
+
+    return { 
+      success: false, 
+      error: err.message,
+      statusCode: err.statusCode 
+    };
+  }
+}
+
+/**
+ * Envía notificación de mención en el chat
+ * @param {string} fromUserId - ID del usuario que menciona
+ * @param {string} toUserId - ID del usuario mencionado
+ * @param {string} message - Texto del mensaje
+ * @param {string} messageId - ID del mensaje
+ */
+export async function sendChatMentionNotification(fromUserId, toUserId, message, messageId) {
+  try {
+    const [fromUser, toUser] = await Promise.all([
+      User.findById(fromUserId).select('username avatarURL'),
+      User.findById(toUserId).select('pushSubscription notificationSettings')
+    ]);
+
+    // Verificar si el usuario quiere recibir notificaciones
+    if (!toUser?.notificationSettings?.mentions || !toUser?.pushSubscription) {
+      return { success: false, reason: 'Notifications disabled' };
+    }
+
+    // Enviar notificación personalizada
+    return await sendPushNotification(
+      toUser.pushSubscription,
+      {
+        title: `${fromUser.username} te mencionó`,
+        body: message,
+        url: `/chat.html?messageId=${messageId}`,
+        icon: fromUser.avatarURL || '/icon-192x192.png',
+        userId: toUserId,
+        messageId
+      },
+      toUserId
+    );
+
+  } catch (err) {
+    console.error('Error en sendChatMentionNotification:', err);
+    return { success: false, error: err.message };
   }
 }

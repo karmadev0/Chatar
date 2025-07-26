@@ -293,4 +293,43 @@ router.put('/mentions/read', verifyToken, async (req, res) => {
   }
 });
 
+// Añade esto en users.js
+router.post('/send-chat-notification', verifyToken, async (req, res) => {
+  try {
+    const { toUserId, message } = req.body;
+    
+    // 1. Obtener usuarios
+    const [fromUser, toUser] = await Promise.all([
+      User.findById(req.user.id).select('username'),
+      User.findById(toUserId).select('pushSubscription notificationSettings username')
+    ]);
+
+    // 2. Verificar si puede recibir notificaciones
+    if (!toUser?.pushSubscription?.endpoint || !toUser.notificationSettings?.pushEnabled) {
+      return res.status(400).json({ 
+        error: "Usuario no suscrito o notificaciones desactivadas"
+      });
+    }
+
+    // 3. Enviar notificación personalizada
+    await sendPushNotification(toUser.pushSubscription, {
+      title: `${fromUser.username} te mencionó`,
+      body: message.length > 100 ? message.substring(0, 100) + '...' : message,
+      url: `/chat.html?mention=${message._id}`,
+      icon: '/icon-192x192.png'
+    });
+
+    res.json({ success: true });
+    
+  } catch (err) {
+    if (err.statusCode === 410) {
+      await User.findByIdAndUpdate(toUserId, {
+        $unset: { pushSubscription: 1 },
+        $set: { "notificationSettings.pushEnabled": false }
+      });
+    }
+    handleError(res, err, 'Error al enviar notificación de chat');
+  }
+});
+
 export default router;

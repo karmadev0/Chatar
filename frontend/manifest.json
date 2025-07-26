@@ -1,0 +1,20 @@
+{
+  "name": "Chatar App",
+  "short_name": "Chatar",
+  "start_url": "/chat",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#ff8c00",
+  "icons": [
+    {
+      "src": "/assets/image/default.jpg",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/image/default.jpg",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

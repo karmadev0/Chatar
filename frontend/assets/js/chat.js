@@ -731,20 +731,47 @@ function clearReply() {
 }
 
 // ======== ENVÍO DE MENSAJES ========
-messageForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!canSend) return;
-    const text = messageInput.value.trim();
-    if (!text) return;
-    if (text.length > 1024) { alert('El mensaje no puede superar los 1024 caracteres.'); return; }
+messageForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!canSend) return;
+  const text = messageInput.value.trim();
+  if (!text) return;
 
-    const payload = replyTo ? { text, replyTo: replyTo.id } : { text };
-    socket.emit('chat message', payload);
-    messageInput.value = '';
-    clearReply();
-    hideMentionsDropdown();
-    canSend = false;
-    setTimeout(() => canSend = true, 1000);
+  // Detectar menciones
+  const mentionMatches = [...text.matchAll(/@(\w+)/g)];
+  const mentions = [];
+  
+  for (const match of mentionMatches) {
+    const user = availableUsers.find(u => u.username === match[1]);
+    if (user && user._id !== currentUser.id) {
+      mentions.push(user._id);
+      
+      // Enviar notificación push
+      try {
+        await fetchWithToken('/api/users/send-chat-notification', {
+          method: 'POST',
+          body: JSON.stringify({
+            toUserId: user._id,
+            message: text
+          })
+        });
+      } catch (err) {
+        console.error('Error enviando notificación:', err);
+      }
+    }
+  }
+
+  const payload = {
+    text,
+    mentions: mentions.length > 0 ? mentions : undefined,
+    replyTo: replyTo?.id
+  };
+
+  socket.emit('chat message', payload);
+  messageInput.value = '';
+  clearReply();
+  canSend = false;
+  setTimeout(() => canSend = true, 1000);
 });
 
 // ======== USUARIO ACTUAL ========
