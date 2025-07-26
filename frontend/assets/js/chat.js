@@ -309,7 +309,12 @@ async function loadNotificationSettings() {
   try {
     const res = await fetchWithToken('/api/users/notification-settings');
     if (res.ok) {
-      notificationSettings = await res.json();
+      const settings = await res.json();
+      notificationSettings = {
+        mentions: settings.mentions ?? true,
+        browser: settings.browser ?? false,
+        pushEnabled: settings.pushEnabled ?? false // ✅ Agregar esta línea
+      };
       updateNotificationUI();
     }
   } catch (err) {
@@ -363,9 +368,16 @@ function showNotificationSettings() {
     <div class="setting-item">
       <div class="setting-info">
         <div class="setting-title">Notificaciones Push</div>
-        <div class="setting-description">Recibir notificaciones incluso fuera del navegador</div>
+        <div class="setting-description">Recibir notificaciones incluso con el navegador cerrado</div>
       </div>
-      <button id="activate-push-btn" class="push-btn">Activar</button>
+      <div class="push-controls">
+        <div class="toggle-switch ${notificationSettings.pushEnabled || false ? 'active' : ''}" data-setting="pushEnabled" id="push-toggle">
+        </div>
+        <button id="activate-push-btn" class="push-btn ${notificationSettings.pushEnabled ? 'activated' : ''}" 
+                ${notificationSettings.pushEnabled ? 'disabled' : ''}>
+          ${notificationSettings.pushEnabled ? '✅ Activado' : '🔔 Activar'}
+        </button>
+      </div>
     </div>
     
     <div class="settings-actions">
@@ -377,17 +389,64 @@ function showNotificationSettings() {
   modal.appendChild(container);
   document.body.appendChild(modal);
   
-  // Botón para activar push notifications
-  container.querySelector('#activate-push-btn').addEventListener('click', () => {
+  // Botón para activar push notifications mejorado
+  const pushBtn = container.querySelector('#activate-push-btn');
+  const pushToggle = container.querySelector('#push-toggle');
+
+  pushBtn.addEventListener('click', async () => {
+    if (pushBtn.disabled) return;
+    
+    pushBtn.disabled = true;
+    pushBtn.textContent = '⏳ Activando...';
+    
     if (currentUser) {
-      subscribeToPushNotifications(currentUser.id);
+      const result = await subscribeToPushNotifications(currentUser.id);
+      
+      if (result.success) {
+        // Éxito
+        notificationSettings.pushEnabled = true;
+        pushToggle.classList.add('active');
+        pushBtn.textContent = '✅ Activado';
+        pushBtn.classList.add('activated');
+        
+        // Alerta informativa
+        showPushSuccessAlert();
+        
+      } else {
+        // Error
+        pushBtn.disabled = false;
+        pushBtn.textContent = '🔔 Activar';
+        
+        if (result.isPermissionDenied) {
+          showPushErrorAlert('Permisos denegados. Ve a configuración del navegador para activar notificaciones.');
+        } else {
+          showPushErrorAlert(`Error: ${result.error}`);
+        }
+      }
     } else {
+      pushBtn.disabled = false;
+      pushBtn.textContent = '🔔 Activar';
       showMessage('Primero debes iniciar sesión', true);
     }
   });
+
+  // Toggle para desactivar push
+  pushToggle.addEventListener('click', () => {
+    if (pushToggle.classList.contains('active')) {
+      // Desactivar
+      pushToggle.classList.remove('active');
+      notificationSettings.pushEnabled = false;
+      pushBtn.disabled = false;
+      pushBtn.textContent = '🔔 Activar';
+      pushBtn.classList.remove('activated');
+    } else if (!pushBtn.disabled) {
+      // Activar (trigger del botón)
+      pushBtn.click();
+    }
+  });
   
-  // Event listeners para toggles
-  const toggles = container.querySelectorAll('.toggle-switch');
+  // Event listeners para toggles normales
+  const toggles = container.querySelectorAll('.toggle-switch:not(#push-toggle)');
   toggles.forEach(toggle => {
     toggle.addEventListener('click', () => {
       const setting = toggle.dataset.setting;
@@ -1015,6 +1074,117 @@ function requestNotificationPermission() {
     if ('Notification' in window && notificationSettings.browser && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission();
     }
+}
+
+// Push
+
+function showPushSuccessAlert() {
+  const alertModal = document.createElement('div');
+  alertModal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  `;
+  
+  alertModal.innerHTML = `
+    <div style="
+      background: #1e1e1e;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 400px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    ">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+      <h3 style="color: #4caf50; margin-bottom: 1rem;">¡Notificaciones Push Activadas!</h3>
+      <p style="margin-bottom: 1.5rem; line-height: 1.4; color: #ccc;">
+        Ahora recibirás notificaciones incluso con el navegador cerrado.
+      </p>
+      <div style="
+        background: #2a2a2a; 
+        padding: 1rem; 
+        border-radius: 8px; 
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #ff9800;
+      ">
+        <p style="margin: 0; font-size: 0.9rem; color: #ffb74d;">
+          ⚠️ <strong>Importante:</strong> Si limpias los datos del navegador o cambias de dispositivo, 
+          deberás reactivar las notificaciones.
+        </p>
+      </div>
+      <button onclick="this.closest('div').remove()" style="
+        background: #4caf50;
+        color: white;
+        padding: 0.8rem 2rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+      ">Entendido</button>
+    </div>
+  `;
+  
+  document.body.appendChild(alertModal);
+  
+  // Auto-cerrar después de 10 segundos
+  setTimeout(() => {
+    if (document.body.contains(alertModal)) {
+      alertModal.remove();
+    }
+  }, 10000);
+}
+
+function showPushErrorAlert(message) {
+  const alertModal = document.createElement('div');
+  alertModal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  `;
+  
+  alertModal.innerHTML = `
+    <div style="
+      background: #1e1e1e;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 400px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    ">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+      <h3 style="color: #f44336; margin-bottom: 1rem;">Error al Activar</h3>
+      <p style="margin-bottom: 1.5rem; line-height: 1.4; color: #ccc;">
+        ${message}
+      </p>
+      <button onclick="this.closest('div').remove()" style="
+        background: #f44336;
+        color: white;
+        padding: 0.8rem 2rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+      ">Cerrar</button>
+    </div>
+  `;
+  
+  document.body.appendChild(alertModal);
 }
 
 // Event listeners adicionales

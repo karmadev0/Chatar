@@ -831,3 +831,92 @@ img.avatar-large {
     padding: 1.5rem;
   }
 }
+
+.push-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.push-btn {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.push-btn:hover:not(:disabled) {
+  background: #1976d2;
+  transform: translateY(-1px);
+}
+
+.push-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.push-btn.activated {
+  background: #4caf50;
+}
+
+.push-btn.activated:hover {
+  background: #45a045;
+}
+
+/* Mejorar el toggle switch para push */
+#push-toggle {
+  position: relative;
+}
+
+#push-toggle::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #2196f3, #21cbf3);
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#push-toggle.active::before {
+  opacity: 0.3;
+  animation: pulse-push 2s infinite;
+}
+
+@keyframes pulse-push {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.05); opacity: 0.5; }
+}
+
+/* Estado deshabilitado para botón de notificaciones */
+#notifications-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#notifications-btn:disabled .notification-badge {
+  display: none;
+}
+
+/* Responsive para controles push */
+@media (max-width: 768px) {
+  .push-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .push-btn {
+    width: 100%;
+  }
+}

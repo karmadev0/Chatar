@@ -146,24 +146,38 @@ router.post('/save-subscription', verifyToken, async (req, res) => {
   try {
     const { subscription } = req.body;
 
-    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+    // ✅ Validación mejorada
+    if (!subscription?.endpoint || 
+        !subscription?.keys?.p256dh || 
+        !subscription?.keys?.auth) {
+      console.error('❌ Suscripción inválida:', subscription);
       return res.status(400).json({ error: "Estructura de suscripción inválida" });
     }
 
-    await User.findByIdAndUpdate(
+    // ✅ Guardar suscripción con validación
+    const user = await User.findByIdAndUpdate(
       req.user.id,
       { 
         $set: { 
-          pushSubscription: subscription,
+          pushSubscription: {
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: subscription.keys.p256dh,
+              auth: subscription.keys.auth
+            }
+          },
           "notificationSettings.pushEnabled": true
         }
       },
       { new: true }
     );
 
+    console.log('✅ Suscripción guardada para usuario:', req.user.id);
+
     return res.json({ success: true });
   } catch (err) {
-    return handleError(res, err, 'Error al guardar suscripción');
+    console.error('❌ Error guardando suscripción:', err);
+    return res.status(500).json({ error: 'Error del servidor' });
   }
 });
 

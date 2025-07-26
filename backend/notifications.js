@@ -14,6 +14,7 @@ webpush.setVapidDetails(
  * @param {Object} options - Opciones de la notificación
  * @param {string} [userId] - ID del usuario (opcional para limpieza de suscripciones)
  */
+
 export async function sendPushNotification(subscription, options = {}, userId = null) {
   // Validación básica
   if (!subscription?.endpoint) {
@@ -22,59 +23,51 @@ export async function sendPushNotification(subscription, options = {}, userId = 
   }
 
   try {
-    // Payload optimizado para notificaciones de chat
+    // ✅ Payload optimizado y simplificado
     const payload = {
       title: options.title || 'Nueva mención',
-      body: typeof options.body === 'string' 
-        ? (options.body.length > 100 ? options.body.substring(0, 100) + '...' : options.body)
-        : 'Tienes una nueva mención',
+      body: options.body || 'Tienes una nueva mención',
       icon: options.icon || '/icon-192x192.png',
-      badge: '/badge.png',
-      vibrate: [200, 100, 200],
-      data: {
-        url: options.url ? `${options.url}${options.url.includes('?') ? '&' : '?'}ref=push` 
-                         : 'https://chatar-m466.onrender.com/chat.html?ref=push',
-        userId: options.userId,
-        messageId: options.messageId
-      },
-      actions: options.actions || [
-        {
-          action: 'view',
-          title: 'Abrir chat'
-        }
-      ]
+      url: options.url || '/chat.html',
+      messageId: options.messageId
     };
 
-    // Configuración de envío
-    const sendOptions = {
-      contentEncoding: 'aes128gcm', // Estándar actual
-      TTL: 24 * 60 * 60, // 24 horas de vida
-      urgency: 'high' // Prioridad alta
-    };
-
-    await webpush.sendNotification(subscription, JSON.stringify(payload), sendOptions);
-
-    console.log(`✅ Notificación enviada a ${userId || 'usuario'}`, {
+    console.log('📤 Enviando notificación:', {
+      userId,
       title: payload.title,
-      endpoint: subscription.endpoint.slice(0, 30) + '...'
+      endpoint: subscription.endpoint.slice(0, 50) + '...'
     });
 
-    return { success: true };
+    // ✅ Configuración de envío simplificada
+    const sendOptions = {
+      TTL: 24 * 60 * 60, // 24 horas
+      urgency: 'high'
+    };
+
+    const result = await webpush.sendNotification(
+      subscription, 
+      JSON.stringify(payload), 
+      sendOptions
+    );
+
+    console.log(`✅ Notificación enviada exitosamente a ${userId || 'usuario'}`);
+    return { success: true, result };
 
   } catch (err) {
-    console.error(`❌ Error en notificación a ${userId || 'usuario'}:`, {
+    console.error(`❌ Error enviando notificación:`, {
+      userId,
       error: err.message,
       statusCode: err.statusCode,
-      endpoint: subscription.endpoint
+      headers: err.headers
     });
 
-    // Manejo específico de errores
+    // Manejar suscripciones expiradas
     if (err.statusCode === 410 && userId) {
+      console.log(`♻️ Limpiando suscripción expirada para usuario ${userId}`);
       await User.findByIdAndUpdate(userId, {
         $unset: { pushSubscription: 1 },
         $set: { 'notificationSettings.pushEnabled': false }
       });
-      console.log(`♻️ Suscripción eliminada para usuario ${userId}`);
     }
 
     return { 

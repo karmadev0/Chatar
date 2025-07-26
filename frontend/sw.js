@@ -1,164 +1,113 @@
-// sw.js - Versión optimizada para Chatar
+// sw.js - Versión corregida para mostrar notificaciones
 const CACHE_NAME = 'chatar-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/chat.html',
-  '/assets/css/chat-dark.css',
-  '/assets/css/chat-light.css',
-  '/assets/js/chat.js',
-  '/assets/js/api.js',
-  '/assets/image/default.jpg',
-  '/icon-192x192.png',
-  '/badge-72x72.png',
-  '/manifest.json'
-];
 
-// Instalación y caching de recursos críticos
+// Instalación
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[SW] Cacheando recursos estáticos');
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-      .then(() => self.skipWaiting())
-  );
+  console.log('[SW] Instalando...');
+  self.skipWaiting();
 });
 
-// Limpieza de caches antiguos
+// Activación
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('[SW] Eliminando cache antiguo:', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-    .then(() => self.clients.claim())
-  );
+  console.log('[SW] Activando...');
+  event.waitUntil(clients.claim());
 });
 
-// Manejo de notificaciones push
+// ✅ CLAVE: Manejo de notificaciones push (CORREGIDO)
 self.addEventListener('push', event => {
-  console.log('[SW] Notificación push recibida', event);
+  console.log('[SW] Push recibido:', event);
   
   let notificationData;
   try {
-    notificationData = event.data?.json();
+    notificationData = event.data ? event.data.json() : {};
+    console.log('[SW] Datos parseados:', notificationData);
   } catch (err) {
-    console.error('[SW] Error parseando datos push:', err);
+    console.error('[SW] Error parseando datos:', err);
     notificationData = {
       title: 'Nueva notificación',
       body: 'Tienes una actualización en Chatar'
     };
   }
 
+  // ✅ IMPORTANTE: Configuración correcta de la notificación
   const title = notificationData.title || 'Chatar';
-  const body = notificationData.body 
-    ? (notificationData.body.length > 100 
-        ? notificationData.body.substring(0, 100) + '...' 
-        : notificationData.body)
-    : 'Nueva actividad en el chat';
-    
   const options = {
-    body,
+    body: notificationData.body || 'Nueva actividad en el chat',
     icon: notificationData.icon || '/icon-192x192.png',
     badge: '/badge-72x72.png',
     vibrate: [200, 100, 200],
+    requireInteraction: true, // ✅ MANTIENE LA NOTIFICACIÓN VISIBLE
+    silent: false, // ✅ ASEGURA QUE NO SEA SILENCIOSA
     data: {
-      url: notificationData.url 
-        ? `${notificationData.url}${notificationData.url.includes('?') ? '&' : '?'}from=push`
-        : '/chat.html?from=push',
+      url: notificationData.url || '/chat.html',
       messageId: notificationData.messageId,
       timestamp: Date.now()
     },
-    tag: 'chatar-notification',
-    renotify: true,
-    actions: notificationData.actions || [
+    tag: 'chatar-mention', // ✅ AGRUPA NOTIFICACIONES
+    renotify: true, // ✅ PERMITE MÚLTIPLES NOTIFICACIONES
+    actions: [
       {
         action: 'view',
-        title: 'Abrir chat'
+        title: '👀 Ver mensaje',
+        icon: '/icon-view.png'
+      },
+      {
+        action: 'dismiss',
+        title: '✖️ Descartar',
+        icon: '/icon-dismiss.png'
       }
     ]
   };
 
+  console.log('[SW] Mostrando notificación:', title, options);
+
+  // ✅ MOSTRAR LA NOTIFICACIÓN (esto es lo que faltaba)
   event.waitUntil(
     self.registration.showNotification(title, options)
+      .then(() => {
+        console.log('[SW] ✅ Notificación mostrada correctamente');
+      })
+      .catch(err => {
+        console.error('[SW] ❌ Error mostrando notificación:', err);
+      })
   );
 });
 
 // Manejo de clics en notificaciones
 self.addEventListener('notificationclick', event => {
-  console.log('[SW] Click en notificación:', event.notification.data);
+  console.log('[SW] Click en notificación:', event.action);
   
   event.notification.close();
   
+  if (event.action === 'dismiss') {
+    return; // Solo cerrar
+  }
+
   const url = event.notification.data?.url || '/chat.html';
-  const promiseChain = clients.matchAll({
-    type: 'window',
-    includeUncontrolled: true
-  }).then(windowClients => {
-    // Buscar si ya hay una pestaña abierta con la URL del chat
-    const matchingClient = windowClients.find(client => {
-      return client.url.includes('chat.html');
-    });
-
-    if (matchingClient) {
-      // Enfocar la pestaña existente
-      return matchingClient.focus().then(client => {
-        // Si hay un mensaje específico, desplazarse a él
-        if (event.notification.data?.messageId && 'postMessage' in client) {
-          client.postMessage({
-            type: 'SCROLL_TO_MESSAGE',
-            messageId: event.notification.data.messageId
-          });
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(clientList => {
+        // Buscar ventana existente
+        for (let client of clientList) {
+          if (client.url.includes('chat.html') && 'focus' in client) {
+            return client.focus();
+          }
         }
-        return client;
-      });
-    } else {
-      // Abrir nueva pestaña si no existe
-      return clients.openWindow(url);
-    }
-  });
-
-  event.waitUntil(promiseChain);
-});
-
-// Manejo de mensajes desde la app
-self.addEventListener('message', event => {
-  if (event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});
-
-// Estrategia Cache-First para recursos estáticos
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  
-  const requestUrl = new URL(event.request.url);
-  
-  // Ignora solicitudes a la API y websockets
-  if (requestUrl.pathname.startsWith('/api/') || 
-      requestUrl.protocol === 'ws:' || 
-      requestUrl.protocol === 'wss:') {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Devuelve el recurso cacheado o haz fetch
-        return response || fetch(event.request);
-      })
-      .catch(() => {
-        // Fallback para páginas (SPA)
-        if (event.request.mode === 'navigate') {
-          return caches.match('/chat.html');
+        // Abrir nueva ventana
+        if (clients.openWindow) {
+          return clients.openWindow(url);
         }
       })
   );
+});
+
+// Manejo básico de fetch (opcional)
+self.addEventListener('fetch', event => {
+  // Solo para recursos estáticos
+  if (event.request.method !== 'GET' || 
+      event.request.url.includes('/api/') ||
+      event.request.url.includes('socket.io')) {
+    return;
+  }
 });
