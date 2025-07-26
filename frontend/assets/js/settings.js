@@ -191,7 +191,7 @@ async function proceedWithUpload() {
   
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/user/avatar', {
+    const res = await fetch('/api/users/avatar', {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
       body: pendingImageData
@@ -403,7 +403,7 @@ updateUsernameBtn?.addEventListener('click', async () => {
   }
 
   try {
-    const res = await fetchWithToken('/api/user/username', {
+    const res = await fetchWithToken('/api/users/username', {
       method: 'PUT',
       body: JSON.stringify({ username: newUsername })
     });
@@ -429,7 +429,7 @@ updatePasswordBtn?.addEventListener('click', async () => {
   }
 
   try {
-    const res = await fetchWithToken('/api/user/password', {
+    const res = await fetchWithToken('/api/users/password', {
       method: 'PUT',
       body: JSON.stringify({ currentPassword, newPassword })
     });
