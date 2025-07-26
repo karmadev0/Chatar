@@ -44,52 +44,41 @@ import { urlBase64ToUint8Array, checkPushSupport } from './pushUtils.js';
 
 const VAPID_PUBLIC_KEY = 'BHvRcnpdYwT_3ZO66SNatTYjAfaG8uMoCITtdkv7XYMkLpY2YUw7m3V087VP8Bzx1C7s8k-JGKUQwSDfexsvImU';
 
+/**
+ * Suscribir al usuario a notificaciones Push
+ * @param {string} userId - ID del usuario
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
 export async function subscribeToPushNotifications(userId) {
   try {
-    // 1. Verificar compatibilidad (usando checkPushSupport)
+    // 1. Verificar compatibilidad
     if (!checkPushSupport()) {
       throw new Error('Tu navegador no soporta notificaciones push');
     }
 
-    // 2. Registrar Service Worker (con ruta absoluta desde la raíz del frontend)
-    const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/'
-    });
-    console.log('Service Worker registrado en:', registration.scope);
+    // 2. Registrar el Service Worker (ruta absoluta)
+    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    console.log('📦 Service Worker registrado en:', registration.scope);
 
-    // 3. Esperar activación (versión mejorada)
-    const activeWorker = registration.active || registration.installing || registration.waiting;
-    if (!activeWorker) {
-      await new Promise((resolve, reject) => {
-        registration.addEventListener('updatefound', resolve);
-        setTimeout(() => reject(new Error('Timeout al activar Service Worker')), 5000);
-      });
-    }
+    // 3. Esperar a que esté listo/controlando la página
+    const serviceWorkerReady = await navigator.serviceWorker.ready;
+    console.log('✅ Service Worker activo y listo:', serviceWorkerReady);
 
-    // 4. Solicitar permisos (con manejo para Safari/iOS)
-    let permission;
-    try {
-      permission = await Notification.requestPermission();
-    } catch (err) {
-      console.warn('Error al solicitar permisos:', err);
-      permission = 'default';
-    }
-    
+    // 4. Pedir permiso de notificaciones
+    const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      throw new Error('Permiso para notificaciones denegado o no decidido');
+      throw new Error('Permiso de notificaciones denegado o no aceptado');
     }
 
-    // 5. Suscribir al usuario (con validación de clave VAPID)
-    if (!VAPID_PUBLIC_KEY) throw new Error('Clave VAPID no configurada');
-    const subscription = await registration.pushManager.subscribe({
+    // 5. Suscribir al usuario al PushManager
+    const subscription = await serviceWorkerReady.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
 
-    // 6. Enviar suscripción al backend (con timeout)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    console.log('📡 Usuario suscrito correctamente:', subscription);
 
+    // 6. Enviar la suscripción al backend
     const response = await fetch('/api/users/save-subscription', {
       method: 'POST',
       headers: {
@@ -98,46 +87,41 @@ export async function subscribeToPushNotifications(userId) {
       },
       body: JSON.stringify({
         userId,
-        subscription: subscription.toJSON() // Asegura formato correcto
-      }),
-      signal: controller.signal
+        subscription: subscription.toJSON()
+      })
     });
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error en el servidor');
+      throw new Error(errorData.message || 'Error al guardar la suscripción en el servidor');
     }
 
-    console.log('✅ Notificaciones push activadas para usuario:', userId);
-    return { 
-      success: true,
-      data: await response.json()
-    };
+    console.log('✅ Subscripción guardada en backend');
+    return { success: true, data: await response.json() };
 
   } catch (error) {
-    console.error('❌ Error en suscripción - Usuario:', userId, 'Detalle:', error);
-    
-    // Manejo especial para suscripciones inválidas
+    console.error('❌ Error al suscribirse a push notifications:', error);
+
+    // Si hay error de suscripción, intenta desuscribirse para limpiar
     if (error.message.includes('subscription')) {
       await unsubscribeFromPushNotifications();
     }
 
-    return { 
-      success: false, 
-      error: error.message,
-      isPermissionDenied: error.message.includes('Permiso')
-    };
+    return { success: false, error: error.message };
   }
 }
 
-// Función auxiliar para desuscribirse
-async function unsubscribeFromPushNotifications() {
-  const registration = await navigator.serviceWorker.ready;
-  const subscription = await registration.pushManager.getSubscription();
-  if (subscription) {
-    await subscription.unsubscribe();
-    console.log('Suscripción eliminada');
+/**
+ * Desuscribirse de notificaciones Push (opcional para limpiar suscripciones fallidas)
+ */
+export async function unsubscribeFromPushNotifications() {
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (registration) {
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) {
+      await subscription.unsubscribe();
+      console.log('🗑️ Usuario desuscrito de push notifications');
+    }
   }
 }
 
