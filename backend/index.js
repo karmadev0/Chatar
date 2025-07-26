@@ -37,7 +37,7 @@ app.use(cookieParser());
 
 // Rutas de la API
 app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 
 // Servir el frontend estático desde ../frontend

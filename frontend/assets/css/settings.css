@@ -273,3 +273,143 @@ button:disabled {
     overflow-y: auto;
   }
 }
+
+/* ==== Modal de Análisis NSFW ==== */
+#analysis-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  padding: 20px;
+  }
+
+#analysis-modal.active {
+  display: flex;
+}
+
+#analysis-container {
+  background: #1e1e1e;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+#analysis-content h3 {
+  color: #fff;
+  margin: 1rem 0;
+  font-size: 1.3rem;
+}
+
+#analysis-content p {
+  color: #ccc;
+  margin: 1rem 0;
+  line-height: 1.4;
+}
+
+#analysis-content small {
+  display: block;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+#analysis-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Barra de progreso */
+#progress-container {
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+#progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #81c784);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.3s ease;
+  animation: progressGlow 2s infinite;
+}
+
+@keyframes progressGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(76, 175, 80, 0.8); }
+}
+
+#progress-text {
+  color: #4caf50;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-align: center;
+  display: block;
+}
+
+/* Botones de resultado */
+#result-actions {
+  margin-top: 1.5rem;
+}
+
+#result-actions button {
+  background: #4caf50;
+  color: white;
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+#result-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #analysis-container {
+    padding: 1.5rem;
+    margin: 1rem;
+    max-width: none;
+  }
+  
+  #analysis-icon {
+    font-size: 2.5rem;
+  }
+  
+  #analysis-content h3 {
+    font-size: 1.1rem;
+  }
+  
+  #result-actions button {
+    width: 100%;
+    padding: 1rem;
+  }
+}
