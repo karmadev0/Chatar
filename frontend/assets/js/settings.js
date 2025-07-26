@@ -333,7 +333,7 @@ async function handleCropConfirm() {
 // === Cargar datos del usuario ===
 async function loadUser() {
   try {
-    const res = await fetchWithToken('/api/user/me');
+    const res = await fetchWithToken('/api/users/me');
     const user = await res.json();
     
     if (!res.ok) throw new Error(user.message);
