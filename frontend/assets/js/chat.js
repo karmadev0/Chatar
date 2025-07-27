@@ -363,6 +363,14 @@ function showNotificationSettings() {
         </button>
       </div>
     </div>
+
+    <div class="info-box">
+    <p style="font-size: 0.85rem; color: #aaa; margin-top: 10px;">
+    ⚠️ Algunos navegadores no permiten enviar notificaciones directamente al sistema.
+    Si quieres saber cuáles son compatibles, visita
+    <a href="/compatibility.html" target="_blank" style="color: #ff8c00; text-decoration: underline;">aquí</a>.
+    </p>
+    </div>
     
     <div class="settings-actions">
       <button id="save-settings">Guardar</button>

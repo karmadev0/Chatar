@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compatibilidad - Chatar App</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    .compatibility-box {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .status {
+      font-size: 1.2rem;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .button {
+      display: inline-block;
+      background: #4caf50;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+    .button:hover {
+      background: #e67600;
+    }
+    .notice {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Compatibilidad de Notificaciones Push</h1>  <div class="compatibility-box" id="browser-info">
+    Detectando navegador...
+  </div>  <div class="compatibility-box">
+    <h2>Compatibilidad General</h2>
+    <ul style="text-align: left; display: inline-block;">
+      <li><strong>Chrome (PC & Android):</strong> Totalmente compatible.</li>
+      <li><strong>Brave:</strong> Compatible, pero requiere activar manualmente notificaciones en Configuración → Escudos.</li>
+      <li><strong>Opera GX (PC):</strong> Versiones anteriores pueden tener soporte, pero las más recientes presentan fallos conocidos con push service.</li>
+      <li><strong>Safari (iPhone & Mac):</strong> Actualmente no soporta notificaciones push desde páginas web. Estamos trabajando en una solución.</li>
+      <li><strong>Otros navegadores:</strong> Dependerá si soportan Service Workers y Push API (recomendamos verificar).</li>
+    </ul>
+  </div>  <p class="notice">
+    Próximamente vamos a crear una versión nativa para celulares y PC si esto tiene apoyo y una base sólida, por mientras solamente seguiremos en la versión web.
+  </p><a href="/chat.html" class="button">Volver al Chat</a>
+
+  <script>
+    const browserBox = document.getElementById('browser-info');
+
+    function detectBrowser() {
+      const ua = navigator.userAgent;
+      let browser = 'Desconocido';
+      let status = 'No hemos podido identificar compatibilidad';
+
+      if (ua.includes('Chrome') && !ua.includes('Edg') && !ua.includes('OPR')) {
+        browser = 'Google Chrome';
+        status = 'Compatible con notificaciones push';
+      } else if (ua.includes('Brave')) {
+        browser = 'Brave';
+        status = 'Compatible, pero requiere configuración manual en Escudos';
+      } else if (ua.includes('OPR') || ua.includes('Opera')) {
+        browser = 'Opera GX';
+        status = 'Puede no ser compatible en versiones recientes. Prueba y verifica';
+      } else if (ua.includes('Edg')) {
+        browser = 'Microsoft Edge';
+        status = 'Compatible con notificaciones push';
+      } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
+        browser = 'Safari';
+        status = 'Actualmente no soportado. Trabajando en compatibilidad futura';
+      } else {
+        browser = navigator.appName;
+        status = 'Compatibilidad desconocida';
+      }
+
+      browserBox.innerHTML = `
+        <h2>Tu navegador:</h2>
+        <p>${browser}</p>
+        <div class="status">${status}</div>
+      `;
+    }
+
+    detectBrowser();
+  </script></body>
+</html>
